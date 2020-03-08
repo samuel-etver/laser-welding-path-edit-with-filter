@@ -1,0 +1,32 @@
+{
+  "name": "welding-path-edit",
+  "version": "1.0.0",
+  "description": "Welding path correction (laser welding for pipes)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "mocha"
+  },
+  "keywords": [
+    "Electron"
+  ],
+  "author": "GitHub",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "electron": "^7.1.10",
+    "electron-packager": "^14.2.0",
+    "mocha": "^7.0.1"
+  },
+  "dependencies": {
+    "bootstrap": "^4.4.1",
+    "csv-parser": "^2.3.2",
+    "csv-writer": "^1.6.0",
+    "jqplot": "^1.0.9",
+    "jquery": "^3.4.1",
+    "nodes7": "^0.3.10",
+    "popper": "^1.0.1",
+    "tabulator-tables": "^4.5.3",
+    "xmldom": "^0.2.1"
+  }
+}
