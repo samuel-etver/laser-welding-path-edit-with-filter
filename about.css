@@ -1,0 +1,82 @@
+body {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+#root-container {
+    position: relative;
+    width: 420px;
+    height: 550px;
+    left: 0px;
+    top: 0px;
+}
+
+#about-image {
+    border-radius: 1rem;
+    box-shadow: 2px -2px 10px rgba(0, 0, 0, 0.7);
+    margin: 12px 12px 12px 12px;
+    position: absolute;
+    width: 380px;
+    height: auto;
+    z-index: 1;
+}
+
+#about-text {
+    position: absolute;
+    width: 340px;
+    height: 200px;
+    z-index: 2;
+    top: 240px;
+    left: 32px;
+    background: #ddddddbb;
+    border: 1px solid black;
+    border-radius: 3px;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+}
+
+#button-container {
+    position: absolute;
+    z-index: 2;
+    bottom: 38px;
+    width: 100%;
+    text-align: center;
+}
+
+#close-button {
+}
+
+#packages-table tr {
+    line-height: 0.3;
+    font-size: 0.9rem;
+    color: black;
+}
+
+#packages {
+    height: 150px;
+    overflow-x:hidden;
+    overflow-y:scroll;
+ }
+
+#version {
+    font-size: 1.2rem;
+    color: black;
+    text-align: center;
+    font-weight: bold;
+}
+
+#version p {
+    margin: 0;
+    padding: 0;
+}
+
+#description {
+    font-size: 0.8rem;
+    color: black;
+    overflow-x:hidden;
+    overflow-y:scroll;
+    height: 150px;
+}
+
+.description-gap {
+    height: 0.3rem;
+}

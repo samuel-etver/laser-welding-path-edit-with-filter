@@ -1,0 +1,131 @@
+body {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.data-space-class {
+    position: fixed;
+    background: #0000ff;
+    margin: 0;
+    padding: 0;
+    width: 100px;
+    height: 100px;
+}
+
+.chart-space-class {
+    position: absolute;
+    margin: 0rem 0.7rem;
+    padding: 0;
+}
+
+.table-space-class {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+}
+
+.data-space-separator-class {
+    height: 0.8rem;
+}
+
+#path-table {
+    position: absolute;
+    border: 1px solid;
+    border-radius: 1rem;
+    box-shadow: 0.1rem -0.1rem 1rem rgba(0, 0, 0, 0.7);
+}
+
+.dots-count-table-container-class {
+    position: absolute;
+    top: 0;
+    padding: 0.1rem;
+    background: #b0efef;
+    border: 1px solid rgba(0, 0, 200, 0.5);
+    border-radius: 1rem;
+    box-shadow: 0.1rem -0.1rem 1rem rgba(0, 0, 0, 0.7);
+}
+
+.path-chart-class {
+    position: absolute;
+    border-radius: 10px;
+    margin: 0px;
+    padding: 0px;
+    border: 1px solid rgba(0, 0, 100, 0.5);
+    box-shadow: 2px -2px 10px rgba(0, 0, 0, 0.7);
+    background: #555555;
+}
+
+.path-chart-class .jqplot-xaxis {
+   margin-top: 0.3rem;
+}
+
+.path-chart-class .jqplot-xaxis-tick {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: #ddffff;
+    text-shadow: 2px -2px 12px rgba(0, 255, 255, 0.7);
+}
+
+.path-chart-class .jqplot-yaxis-tick {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #ddffff;
+    text-shadow: 2px -2px 12px rgba(0, 255, 255, 0.7);
+}
+
+.path-chart-class .jqplot-grid {
+    background: black;
+    color: red;
+}
+
+.path-chart-class .jqplot-cursor-tooltip {
+    border: 1px solid #aaaaaa;
+    background: rgba(70%,60%,50%,0.5);
+    padding: 0px 4px;
+    color: #ddaa44;
+}
+
+.path-chart-class .jqplot-highlighter-tooltip, .path-chart-class .jqplot-canvasOverlay-tooltip {
+    border: 1px solid #aaaaaa;
+    background: rgba(70%,60%,50%,0.5);
+    padding: 0px 4px;
+    color: #ddaa44;
+}
+
+
+.path-chart-controller-class {
+    position: absolute;
+    border-radius: 10px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 100, 0.5);
+    box-shadow: 2px -2px 10px rgba(0, 0, 0, 0.7);
+    background: #eeffee;
+}
+
+.path-chart-controller-class .jqplot-xaxis {
+   margin-top: 0.4rem;
+}
+
+.path-chart-controller-class .jqplot-xaxis-tick {
+    color: #000000;
+    text-shadow: 2px -2px 12px rgba(0, 100, 0, 0.7);
+}
+
+.path-chart-controller-class .jqplot-yaxis-tick {
+    color: #000000;
+    text-shadow: 2px -2px 12px rgba(0, 100, 0, 0.7);
+}
+
+#write-confirmation-modal-dialog-values-table {
+    position: relative;
+    margin-left: 2rem;
+}
+
+.bottom-bordered {
+   border-bottom: 1px solid #dddddd;
+}
+
+.write-confirmation-modal-dialog-values-table-column2 {
+   padding-left: 1rem;
+}

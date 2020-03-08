@@ -1,0 +1,101 @@
+<html>
+  <header>
+    <title>О программе</title>
+    <meta charset="UTF-8">
+    <link href="./node_modules/bootstrap/dist/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="./about.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script>window.$ = window.jQuery = require('jquery');</script>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+  </header>
+
+  <body>
+
+    <div id="root-container">
+    <img id="about-image" src="./Images/laser-steel-pipe-welding.jpg"/>
+    <div class="container mt-3" id="about-text" style="margin:2px; padding:2px 4px">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#version">Версия</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link"  data-toggle="tab" href="#description">Описание</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link"  data-toggle="tab" href="#packages">Пакеты</a>
+        </li>
+    </ul>
+    <div class="tab-content" style="margin:0; padding:0">
+        <div class="tab-pane fade" id="description">
+        Лицензия: CC0 1.0 (Public Domain)<br>
+        <div class="description-gap"></div>
+        Редактор Y-координаты траектории для стана лазерной сварки труб большого диаметра.<br>
+        <div class="description-gap"></div>
+        При помощи программы с контроллера <span style="white-space:nowrap">Simatic S-300</span> считываются <span style="white-space:nowrap">Y-координаты</span>
+        отсканированной разделки трубы. Значения можно изменить либо в таблице, либо на графике перетаскиванием точек.
+        Статус точки <span style="white-space:nowrap">(достоверная/недостоверная)</span> можно изменить в таблице.
+        Скорректированная траектория записывается обратно в контроллер.
+        Траекторию можно <span style="white-space:nowrap">сохранить/загрузить</span> в csv или xml-формате.
+        </div>
+        <div class="tab-pane fade show active" id="version">
+            <p>Редактор для стана лазерной сварки труб большoго диаметра</p>
+            <div style="font-size: 1.0rem; margin: 1.1rem;">
+              <p>Версия: 1.0.0</p>
+              <p>Дата: 2020-02-25</p>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="packages">
+            <table class="table" id="packages-table">
+                <tr>
+                    <td style="border-top:none">bootstrap:</td>
+                    <td style="border-top:none">4.4.1</td>
+                </tr>
+                <tr>
+                    <td>csv-parser:</td>
+                    <td>2.3.2</td>
+                </tr>
+                <tr>
+                    <td>csv-writer:</td>
+                    <td>1.6.0</td>
+                </tr>
+                <tr>
+                    <td>electron:</td>
+                    <td>7.1.10</td>
+                </tr>
+                <tr>
+                    <td>jqplot:</td>
+                    <td>1.0.9</td>
+                </tr>
+                <tr>
+                    <td>jquery:</td>
+                    <td>3.4.1</td>
+                </tr>
+                <tr>
+                    <td>nodes7:</td>
+                    <td>0.3.10</td>
+                </tr>
+                <tr>
+                    <td>popper:</td>
+                    <td>1.0.1</td>
+                </tr>
+                <tr>
+                    <td>tabulator-tables:</td>
+                    <td>4.5.3</td>
+                </tr>
+                <tr>
+                    <td>xmldom:</td>
+                    <td>0.2.1</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    </div>
+      <div id="button-container">
+        <button class="btn btn-primary btn" id="close-button">Закрыть</button>
+      </div>
+    </div>
+
+    <script src="./about.js"></script>
+  </body>
+</html>

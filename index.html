@@ -1,0 +1,279 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link href="./node_modules/bootstrap/dist/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="./node_modules/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="./node_modules/jqplot/jquery.jqplot.min.css" />
+    <link rel="stylesheet" type="text/css" href="./index.css">
+    <script>window.$ = window.jQuery = require('jquery');</script>
+    <script src="./node_modules/jqplot/jquery.jqplot.min.js"></script>
+    <script src="./node_modules/jqplot/plugins/jqplot.cursor.js"></script>
+    <script src="./node_modules/jqplot/plugins/jqplot.highlighter.js"></script>
+    <script src="./node_modules/jqplot/plugins/jqplot.draggable.js"></script>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <title>Редактор траектории лазерной сварки</title>
+  </head>
+  <body>
+
+    <div style="margin-left:8px; margin-top:8px; white-space:nowrap;">
+      <button class="btn btn-primary" id="read-button">Считать</button>
+      <button class="btn btn-primary ml-2" id="write-button">Записать</button>
+      <button class="btn btn-secondary ml-2" id="reset-modification-button">Отмена изменений</button>
+      <button class="btn btn-secondary ml-2" id="reset-zoom-button">Сброс масштаба</button>
+      <button class="btn btn-warning ml-2" id="exit-button">Выход</button>
+    </div>
+
+    <div class="data-space-separator-class" id="data-space-separator"></div>
+
+    <div class="chart-space-class container" id="chart-space">
+      <div class="path-chart-class" id="path-chart" style="width:400px; height:300px"></div>
+      <div class="path-chart-controller-class" id="path-chart-controller" style="width:400px; height:120px;"></div>
+    </div>
+
+    <div class="table-space-class" id="table-space">
+      <div class="dots-count-table-container-class container" id="dots-count-table-container">
+        <table class="table table-sm table-info" style="margin: 0; border-radius: 0.8rem;">
+          <thead>
+            <tr>
+              <th colspan="3" style="border: none">Количество точек</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Всего</td>
+              <td><label id="all-dots-count-label"></label></td>
+              <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" onclick="onOpenDotsCountDialog()">...</button></td>
+            </tr>
+            <tr>
+              <td>Хорошие</td>
+              <td><label id="good-dots-count-label"></label></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Плохие</td>
+              <td><label id="bad-dots-count-label"></label></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="path-table" style="width:300px"></div>
+    </div>
+
+
+    <!-- dots counts modal dialog -->
+    <div class="modal" id="dots-count-modal-dialog">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h4 class="modal-title">Количество точек</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <input type="text" id="dots-count-modal-input" class="form-control">
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="onDotsCountDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- options modal dialog -->
+    <div class="modal" id="options-modal-dialog">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h4 class="modal-title">Настройки</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <form style="margin: 2px">
+              <div class="form-group">
+                <label for="ip-input">IP</label>
+                <input class="form-control" id="ip-input">
+              </div>
+
+              <div class="form-group" style="margin-top:30;">
+                <label for="block-number-input">DATA BLOCK</label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">DB</span>
+                  </div>
+                  <input class="form-control" id="block-number-input">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:30;">
+                <label for="number-of-dots-address-input">Количество точек (INT)</label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Адрес</span>
+                  </div>
+                  <input class="form-control" id="number-of-dots-address-input">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:30;">
+                <label for="y-array-address-input">Tочки (REAL, ARRAY)</label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Адрес</span>
+                  </div>
+                  <input class="form-control" id="y-array-address-input">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:30;">
+                <label for="y-status-array-address-input">Статусы точек (BOOL, ARRAY)</label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Адрес</span>
+                  </div>
+                  <input class="form-control" id="y-status-array-address-input">
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="onOptionsDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- error modal dialog -->
+    <div class="modal" id="error-modal-dialog">
+      <div class="modal-dialog  modal-sm modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
+          <h4 class="modal-title" style="margin: auto 0" >Ошибка!</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body" id="error-modal-body">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Закрыть</button>
+        </div>
+
+      </div>
+      </div>
+    </div>
+
+
+    <!-- write confirmation modal dialog -->
+    <div class="modal" id="write-confirmation-modal-dialog">
+      <div class="modal-dialog  modal modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
+            <h4 class="modal-title" style="margin: auto 0" >Внимание!</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            Блок данных контроллера будет перезаписан!<br>
+            Проверьте номер блока данных, и адреса переменных.<br>
+            <table id="write-confirmation-modal-dialog-values-table">
+              <tr style="bottom-border: 1px solid gray">
+                <td class="bottom-bordered">IP-адрес контроллера:</td>
+                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-ip"></span></td>
+              </tr>
+              <tr>
+                <td class="bottom-bordered">Блок данных:</td>
+                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-block-number"></span></td>
+              </tr>
+              <tr>
+                <td class="bottom-bordered">Адрес количества точек:</td>
+                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-number-of-dots-address"></span></td>
+              </tr>
+              <tr>
+                <td class="bottom-bordered">Адрес массива точек:</td>
+                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-y-array-address"></span></td>
+              </tr>
+              <tr>
+                <td>Адрес массива статусов точек:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-y-status-array-address"></span></td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="writePathToSimatic();" data-dismiss="modal">Записать</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- write success modal dialog -->
+    <div class="modal" id="write-success-modal-dialog">
+      <div class="modal-dialog  modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
+            <h4 class="modal-title" style="margin: auto 0" >Внимание!</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            Данные записаны успешно!
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Закрыть</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!--confirmation dialog -->
+    <div class="modal" id="confirmation-modal-dialog">
+      <div class="modal-dialog  modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
+            <h4 class="modal-title" style="margin: auto 0" >Внимание!</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body" id="confirmation-modal-body">
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal" id="confirmation-modal-dialog-yes-button">Да</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Нет</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>
