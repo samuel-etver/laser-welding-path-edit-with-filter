@@ -280,8 +280,11 @@ function refreshWeldingPathTable(pathData) {
   var tableData = [];
   for (item of pathData) {
     var x = index * 5;
-    tableData.push(
-      {index:index, x:x, y:item[0], valid:item[1] != 0}
+    tableData.push({
+      index: index,
+       x: x,
+       y: item.y,
+       valid: item.status != 0}
     );
     index++;
   }
@@ -293,10 +296,10 @@ function readModifiedWeldingPathData() {
   var data = pathTable.getData()
   modifiedWeldingPathData = [];
   for (item of data) {
-    modifiedWeldingPathData.push([
-      item.y,
-      item.valid ? 1 : 0
-    ]);
+    modifiedWeldingPathData.push({
+      y: item.y,
+      status: (item.valid ? 1 : 0)
+    });
   }
 }
 
@@ -322,9 +325,9 @@ function refreshPathChart(weldingData) {
 
   for (var i = 0; i < count; i++) {
     var item = weldingData[i];
-    var status = item[1];
+    var status = item.status;
     if ( status ) {
-      seriesData.push([kX*i, item[0]]);
+      seriesData.push( [kX*i, item.y] );
     }
   }
   pathChart.series[0].data = seriesData;
@@ -462,7 +465,10 @@ function resizeWeldingData(newSize) {
   }
   else {
     while ( modifiedWeldingPathData.length < newSize ) {
-      modifiedWeldingPathData.push([0.0, 1]);
+      modifiedWeldingPathData.push({
+        y: 0.0,
+        status: 1
+      });
     }
   }
 
@@ -477,7 +483,7 @@ function refreshDotsCountLabels(data) {
 
   var goodDots = 0;
   for (var item of data) {
-    if ( item[1] ) {
+    if ( item.status ) {
       goodDots++;
     }
   }

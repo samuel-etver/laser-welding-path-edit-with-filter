@@ -273,7 +273,10 @@ function readPathFromSimatic(sender) {
       if ( statusBits & (1 << (bitsIndex)) ) {
         status = 1;
       }
-      data.push( [y, status] );
+      data.push({
+        y: y,
+        status: status
+      });
       bitsIndex++;
       if ( bitsIndex == 8 ) {
         bitsIndex = 0;
@@ -313,7 +316,7 @@ function writePathToSimatic(sender, data) {
   var i;
 
   for (item of weldingPathData) {
-    yArr.push( item[0] );
+    yArr.push( item.y );
   }
   for (i = yArr.length; i < n; i++) {
     yArr.push( 0 );
@@ -321,7 +324,7 @@ function writePathToSimatic(sender, data) {
 
   for (item of weldingPathData) {
     yStatus >>= 1;
-    if ( item[1] ) {
+    if ( item.status ) {
         yStatus |= 0x80;
     }
     yStatusBitIndex++;
@@ -560,7 +563,10 @@ function loadFromXmlFile(filename) {
             }
           }
           if ( y != null && status != null ) {
-            newWeldingPathData.push( [y, status] );
+            newWeldingPathData.push({
+              y: y,
+              status: status
+            });
           }
         }
 
@@ -594,7 +600,10 @@ function loadFromCsvFile(filename) {
           if (status != 0) {
             status = 1;
           }
-          newWeldingPathData.push([y, status]);
+          newWeldingPathData.push({
+            y: y,
+            status: status
+          });
         }
         else {
           error = true;
@@ -696,10 +705,10 @@ function saveToXmlFile(filename) {
     var itemEl = doc.createElement('item');
     pathEl.appendChild(itemEl);
     var yEl = doc.createElement('y');
-    yEl.appendChild(doc.createTextNode(item[0].toString()));
+    yEl.appendChild(doc.createTextNode(item.y.toString()));
     itemEl.appendChild(yEl);
     var statusEl = doc.createElement('status');
-    statusEl.appendChild(doc.createTextNode(item[1].toString()));
+    statusEl.appendChild(doc.createTextNode(item.status.toString()));
     itemEl.appendChild(statusEl);
   }
   var serializer = new xmldom.XMLSerializer();
@@ -723,7 +732,14 @@ function saveToCsvFile(filename) {
     fieldDelimiter: ';',
     recordDelimiter: '\r\n'
   });
-  return writer.writeRecords(weldingPathData);
+  var data = [];
+  for (var item of weldingPathData) {
+    data.push([
+      item.y,
+      item.status
+    ]);
+  }
+  return writer.writeRecords(data);
 }
 
 
