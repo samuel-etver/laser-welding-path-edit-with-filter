@@ -92,6 +92,20 @@ body {
     color: #ddaa44;
 }
 
+.path-chart-class table.jqplot-table-legend {
+  width: 320px;
+  margin-top: -20px;
+  background: none;
+  color: #bbffaa;
+  border: none;
+  text-shadow: 2px -2px 12px rgba(0, 255, 0, 0.7);
+}
+
+.path-chart-class .jqplot-table-legend-swatch-outline {
+  border: none;
+  width: 12px;
+}
+
 
 .path-chart-controller-class {
     position: absolute;

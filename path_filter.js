@@ -4,54 +4,56 @@ function filterPath(filterName, data, options) {
     filterName = 'default';
   }
 
-  switch(filterName) {        
+  switch(filterName) {
     case 'default':
-    case 'diff': 
-      return filterPathWithDiff(data, options);            
-    case 'med':
-      return filterPathWithMed(data, options);            
+    case 'diff':
+      return filterPathWithDiff(data, options);
   }
 }
 
 
 function filterPathWithDiff(data, options) {
   var deltaYmax = 0.1;
-  if ( !options || !options.deltaYmax ) {
+  if ( options && options.deltaYmax ) {
     deltaYmax = options.deltaYmax;
   }
 
   var arrIn = data.arrIn;
   var arrStatus = data.arrStatus;
+  var arrDeltaYmax = [
+    10 * deltaYmax,
+    3 * deltaYmax,
+    1 * deltaYmax
+  ];
 
-  var arrXY = filterUtils.buildArrayXY(arrIn, arrStatus);
-  if ( arrXY.length == 0 ) {
-    return undefined;
-  }
-  if ( arrXY.length == 1 ) {
-    return filterUtils.interpolate(arrIn, arrStatus);
-  }
-
-  var factors = filterUtils.calcFactors3( arrXY );
-  var calcY = x => filterUtils.calcPolinom3(factors, x);
-  var n = arrIn.length;
-
-  var y0 = arrStatus[0] ? arrIn[0] : calcY(0);
-  var y1;
-  var arrOut = [y0, ];
-  for (var i = 1; i < n; i++) {
-    if ( arrStatus[i] ) {
-      y1 = arrIn[i];
+  for (deltaYmax of arrDeltaYmax) {
+    var arrXY = filterUtils.buildArrayXY(arrIn, arrStatus);
+    if ( arrXY.length == 0 ) {
+      return undefined;
     }
-    else {
-      y1 = y0 + (calcY(i) - calcY(i - 1));
+    if ( arrXY.length == 1 ) {
+      return filterUtils.interpolate(arrIn, arrStatus);
     }
-    y0 = y1;
+
+    var factors = filterUtils.calcFactors3( arrXY );
+    var calcY = x => filterUtils.calcPolinom3(factors, x);
+    var n = arrIn.length;
+
+    var y0 = arrStatus[0]
+      ? arrIn[0]
+      : calcY(0);
+    for (var i = 1; i < n; i++) {
+      var y1 = arrStatus[i]
+        ? arrIn[i]
+        : (y0 + calcY(i) - calcY(i - 1));
+      if ( Math.abs(y1 - y0) > deltaYmax ) {
+        arrStatus[i] = 0;
+      }
+      y0 = y1;
+    }
   }
 
-  return filterUtils.interpolate(arrOut, arrStatus);
-}
-
-function filterPathWithMed(data, options) {
+  return filterUtils.interpolate(arrIn, arrStatus);
 }
 
 
@@ -67,19 +69,19 @@ var filterUtils = {
   },
 
   calcDeterminant3: function(a) {
-    return  a[0][0]*a[1][1]*a[2][2] + 
-            a[0][1]*a[1][2]*a[2][0] + 
-            a[0][2]*a[1][0]*a[2][1] - 
-            a[0][0]*a[1][2]*a[2][1] - 
-            a[0][1]*a[1][0]*a[2][2] - 
+    return  a[0][0]*a[1][1]*a[2][2] +
+            a[0][1]*a[1][2]*a[2][0] +
+            a[0][2]*a[1][0]*a[2][1] -
+            a[0][0]*a[1][2]*a[2][1] -
+            a[0][1]*a[1][0]*a[2][2] -
             a[0][2]*a[1][1]*a[2][0];
   },
-  
+
   solveLinear3: function(arrIn) {
     var n = 3;
     var desI = [0, 0, 0];
     var matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-    
+
     for (var i = 0; i < n; i++) {
       matrix[i][0] = arrIn[i][0];
       matrix[i][1] = arrIn[i][1];
@@ -88,7 +90,7 @@ var filterUtils = {
     var des = this.calcDeterminant3(matrix);
     if ( !(des) ) {
       return null;
-    }              
+    }
 
     for (i = 0; i < n; i++) {
       matrix[i][0] = arrIn[i][3];
@@ -120,12 +122,12 @@ var filterUtils = {
     }
     return aout;
   },
-  
+
   /*
     * Method of least squeares
     */
   calcFactors3: function(arrIn) {
-    var n = arrIn.length; 
+    var n = arrIn.length;
 
     var x;
     var y;
@@ -152,19 +154,19 @@ var filterUtils = {
 
     if ( n ) {
       return this.solveLinear3([[mx4, mx3, mx2, mx2y],
-                                [mx3, mx2, mx,  mxy], 
+                                [mx3, mx2, mx,  mxy],
                                 [mx2, mx,  n,   my]]);
     }
 
     return null;
   },
-  
+
   calcPolinom3: function(factors, arg) {
     return  factors[0]*arg*arg +
             factors[1]*arg +
             factors[2];
   },
-  
+
   buildArrayXY: function(arrIn, arrStatus) {
     var arrOut = [];
     var n = arrIn.length;
@@ -175,14 +177,14 @@ var filterUtils = {
     }
     return arrOut;
   },
-  
+
   makeGood: function(arrStatus) {
     var n = arrStatus.length;
     for (var i = 0; i < n; i++) {
       arrStatus[i] = 1;
     }
   },
-  
+
   interpolate: function(arrIn, arrStatus) {
     var n = arrIn.length;
     var arrOut = [];
@@ -191,14 +193,14 @@ var filterUtils = {
     }
 
     var index0;
-      
+
     var doInterpolation = function(loIndex, hiIndex) {
       if ( loIndex === undefined) {
         var value = arrOut[hiIndex];
         for (var i = 0; i < hiIndex; i++) {
           arrOut[i] = value;
         }
-      } 
+      }
       else {
         var y0 = arrOut[loIndex];
         var y1 = arrOut[hiIndex];
@@ -207,17 +209,17 @@ var filterUtils = {
         }
       }
     }
-      
+
     for (var i = 0; i < n; i++) {
       if ( !arrStatus[i] ) {
         continue;
-      }            
+      }
       if (i - 1 !== index0) {
         doInterpolation(index0, i);
-      }            
-      index0 = i;            
+      }
+      index0 = i;
     }
-      
+
     if ( index0 != i ) {
       if ( index0 === undefined) {
         for (i = 0; i < n; i++) {
@@ -233,7 +235,7 @@ var filterUtils = {
     }
 
     return arrOut;
-  }, 
+  },
 }
 
 

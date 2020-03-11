@@ -2,7 +2,7 @@ const electron = require('electron')
 const ipc = electron.ipcRenderer
 const tabulator = require('tabulator-tables')
 const constants = require('./constants.js')
-
+const filters = require('./path_filter.js')
 
 var readButton
 var writeButton
@@ -26,9 +26,10 @@ var draggedDotIndex
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
     originalWeldingPathData = arg;
-    refreshWeldingPathTable(originalWeldingPathData);
-    refreshPathChart(originalWeldingPathData);
-    refreshDotsCountLabels(originalWeldingPathData);
+    filterPath(arg);
+    refreshWeldingPathTable(arg);
+    refreshPathChart(arg);
+    refreshDotsCountLabels(arg);
   });
 
   ipc.on('get-path-data', () => {
@@ -74,7 +75,7 @@ window.onload = function() {
 
   chartSpace = document.getElementById('chart-space');
 
-  pathChartController = $.jqplot('path-chart-controller', [[,]],
+  pathChartController = $.jqplot('path-chart-controller', [ [,] ],
     {
       seriesColors: [
         '#dd0000'
@@ -118,21 +119,30 @@ window.onload = function() {
   );
 
   $.jqplot.config.enablePlugins = true;
-  pathChart = $.jqplot('path-chart',  [[,]],
+  pathChart = $.jqplot('path-chart',  [ [,], [,] ],
     {
-      seriesColors: [
-        '#ffffff'
-      ],
       seriesDefaults: {
-        showMarker: true,
         shadow: false,
         lineWidth: 1,
-        markerOptions: {
-          shadow: false,
-          size: 7,
-          color: '#ffaa88'
-        },
       },
+      series: [
+        {
+          color: '#ffffff',
+          label: 'Исходная',
+          showMarker: true,
+          markerOptions: {
+            shadow: false,
+            size: 7,
+            color: '#ffaa88'
+          },
+        },
+        {
+          color: '#9999ff',
+          label: 'После фильтра',
+          lineWidth: 3,
+          showMarker: false,
+        }
+      ],
       cursor: {
         show: true,
         zoom: true,
@@ -163,28 +173,48 @@ window.onload = function() {
         gridLineColor: '#555555',
       },
       gridPadding: {
-        top:     8,
+        top:    20,
         bottom: 24,
         left:   80,
         right:  20
-      }
+      },
+      legend: {
+          show: true,
+          location: 'nw',
+          renderer: $.jqplot.EnhancedLegendRenderer,
+          rendererOptions: {
+              numberColumns: 2,
+          }
+      },
+
     }
   );
   pathChart.series[0].plugins.draggable.constrainTo = 'y';
+  pathChart.series[1].plugins.draggable = undefined;
 
   $.jqplot.Cursor.zoomProxy(pathChart, pathChartController);
   $('#path-chart').bind('jqplotDragStart', (ev, seriesIndex, pointIndex) => { draggedDotIndex = pointIndex; });
   $('#path-chart').bind('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
+
+  var columnYFormatter =  (cell, formatterParams, onRendered) => {
+    var value = cell.getValue();
+    if ( value === undefined ) {
+      return '';
+    }
+    return parseFloat(cell.getValue()).toFixed(3);
+  };
+  var columnXWidth = 59;
+  var columnYWidth = columnXWidth;
 
   pathTable = new tabulator("#path-table", {
     autoResize: false,
     height: "400px",
     columns:[
       {
-        title: "ИНДЕКС",
+        title: "ИНД",
         field: "index",
         align: "right",
-        width: 72,
+        width: 48,
         headerSort: false
       },
 
@@ -192,7 +222,7 @@ window.onload = function() {
         title: "X,мм",
         field: "x",
         align: "right",
-        width: 68,
+        width: columnXWidth,
         headerSort: false
       },
 
@@ -200,11 +230,18 @@ window.onload = function() {
         title: "Y,мм",
         field: "y",
         align: "right",
-        width: 68,
-        formatter: function(cell, formatterParams, onRendered) {
-          return parseFloat(cell.getValue()).toFixed(3);
-        },
+        width: columnYWidth,
+        formatter: columnYFormatter,
         editor: "input",
+        headerSort: false
+      },
+
+      {
+        title: "Yф,мм",
+        field: "filteredY",
+        align: "right",
+        width: columnYWidth,
+        formatter: columnYFormatter,
         headerSort: false
       },
 
@@ -278,14 +315,16 @@ function writePathToSimatic() {
 function refreshWeldingPathTable(pathData) {
   var index = 0;
   var tableData = [];
+  var kX = constants.kX;
   for (item of pathData) {
-    var x = index * 5;
+    var x = index * kX;
     tableData.push({
       index: index,
        x: x,
        y: item.y,
-       valid: item.status != 0}
-    );
+       filteredY: item.filteredY,
+       valid: item.status != 0,
+    });
     index++;
   }
   pathTable.replaceData(tableData);
@@ -320,17 +359,23 @@ function resetModifiedPathData() {
 
 function refreshPathChart(weldingData) {
   var seriesData = [];
+  var filteredData = [];
   var count = weldingData.length;
-  var kX = constants.kX;
+  var kX = 1; //constants.kX;
 
   for (var i = 0; i < count; i++) {
     var item = weldingData[i];
+    var x = kX*i;
     var status = item.status;
     if ( status ) {
-      seriesData.push( [kX*i, item.y] );
+      seriesData.push( [x, item.y] );
+    }
+    if ( item.filteredY !== undefined ) {
+      filteredData. push( [x, item.filteredY] );
     }
   }
   pathChart.series[0].data = seriesData;
+  pathChart.series[1].data = filteredData;
   pathChartController.series[0].data = seriesData;
 
   new Promise(() => {
@@ -341,6 +386,29 @@ function refreshPathChart(weldingData) {
   });
 }
 
+function filterPath(weldingData) {
+  var arrIn = [];
+  var arrStatus = [];
+  for (var item of weldingData) {
+    arrIn.push( item.y );
+    arrStatus.push( item.status );
+  }
+  var arrOut = filters.filterPath(
+    'diff',
+    {
+        arrIn: arrIn,
+        arrStatus: arrStatus
+    },
+    {
+      deltaYmax: 0.01,
+    }
+  );
+
+  var n = arrIn.length;
+  for (var i = 0; i < n; i++) {
+    weldingData[i].filteredY = arrOut[i];
+  }
+}
 
 function onResizeWindow() {
   var gap = chartSpace.getBoundingClientRect().left;
@@ -415,7 +483,8 @@ function onDragStopPathChart(dotChartIndex) {
   new Promise(() => {
     pathChartController.replot();
   });
-  var dotTableIndex = Math.round(dot[0]/constants.kX);
+  var kX = 1; // constants.kX
+  var dotTableIndex = Math.round(dot[0]/kX);
   var tableData = pathTable.getData();
   tableData[dotTableIndex].y = dot[1];
   new Promise(() => {
