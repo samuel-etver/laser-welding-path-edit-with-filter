@@ -107,30 +107,6 @@ body {
 }
 
 
-.path-chart-controller-class {
-    position: absolute;
-    border-radius: 10px;
-    margin: 0;
-    padding: 0;
-    border: 1px solid rgba(0, 0, 100, 0.5);
-    box-shadow: 2px -2px 10px rgba(0, 0, 0, 0.7);
-    background: #eeffee;
-}
-
-.path-chart-controller-class .jqplot-xaxis {
-   margin-top: 0.4rem;
-}
-
-.path-chart-controller-class .jqplot-xaxis-tick {
-    color: #000000;
-    text-shadow: 2px -2px 12px rgba(0, 100, 0, 0.7);
-}
-
-.path-chart-controller-class .jqplot-yaxis-tick {
-    color: #000000;
-    text-shadow: 2px -2px 12px rgba(0, 100, 0, 0.7);
-}
-
 #write-confirmation-modal-dialog-values-table {
     position: relative;
     margin-left: 2rem;

@@ -21,8 +21,8 @@ function filterPathWithDiff(data, options) {
   var arrIn = data.arrIn;
   var arrStatus = data.arrStatus;
   var arrDeltaYmax = [
+    100 * deltaYmax,
     10 * deltaYmax,
-    3 * deltaYmax,
     1 * deltaYmax
   ];
 

@@ -13,7 +13,6 @@ var allDotsCountLabel
 var badDotsCountLabel
 var goodDotsCountLabel
 var pathChart
-var pathChartController
 var pathTable
 var originalWeldingPathData = []
 var modifiedWeldingPathData = []
@@ -74,49 +73,6 @@ window.onload = function() {
   tableSpace = document.getElementById('table-space');
 
   chartSpace = document.getElementById('chart-space');
-
-  pathChartController = $.jqplot('path-chart-controller', [ [,] ],
-    {
-      seriesColors: [
-        '#dd0000'
-      ],
-      seriesDefaults: {
-        showMarker: true,
-        shadow: false,
-        lineWidth: 2.5,
-        markerOptions: {
-          show: false
-        },
-        fill: true,
-        fillAndStroke: true
-      },
-      cursor: {
-        show: true,
-        zoom: true,
-        tooltipLocation: 'sw'
-      },
-      axes: {
-        xaxis: {
-          pad: 0,
-          rendererOptions: {
-              forceTickAt0: true
-          }
-        }
-      },
-      grid: {
-        shadow: false,
-        background: '#bbeebb',
-        borderWidth: 0,
-        gridLineColor: '#77bb77'
-      },
-      gridPadding: {
-        top:     8,
-        bottom: 24,
-        left:   80,
-        right:  20
-      }
-    }
-  );
 
   $.jqplot.config.enablePlugins = true;
   pathChart = $.jqplot('path-chart',  [ [,], [,] ],
@@ -192,7 +148,6 @@ window.onload = function() {
   pathChart.series[0].plugins.draggable.constrainTo = 'y';
   pathChart.series[1].plugins.draggable = undefined;
 
-  $.jqplot.Cursor.zoomProxy(pathChart, pathChartController);
   $('#path-chart').bind('jqplotDragStart', (ev, seriesIndex, pointIndex) => { draggedDotIndex = pointIndex; });
   $('#path-chart').bind('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
 
@@ -376,13 +331,9 @@ function refreshPathChart(weldingData) {
   }
   pathChart.series[0].data = seriesData;
   pathChart.series[1].data = filteredData;
-  pathChartController.series[0].data = seriesData;
 
   new Promise(() => {
     pathChart.replot( {resetAxes: true}  );
-  });
-  new Promise(() => {
-    pathChartController.replot( {resetAxes: true} );
   });
 }
 
@@ -449,23 +400,18 @@ function onResizeWindow() {
   }
   chartSpace.style.width = chartSpaceW + 'px';
 
-  var chartControllerOffsets = document.getElementById('path-chart-controller').getBoundingClientRect();
   var chartW = chartSpaceW - 2;
   if (chartW < 0) {
     chartW = 0;
   }
-  var chartH = dataSpaceHeight - (chartControllerOffsets.bottom - chartControllerOffsets.top) - gap;
+  var chartH = dataSpaceHeight;
   if ( chartH < 0 ) {
       chartH = 0;
   }
 
-  var chartControllerTop = chartH + gap;
 
-  $('#path-chart-controller').width(chartW);
-  $('#path-chart-controller').css({top:chartControllerTop + 'px'});
   $('#path-chart').width(chartW);
   $('#path-chart').height(chartH);
-  pathChartController.replot();
   pathChart.replot();
 
   pathTable.redraw(true);
@@ -473,16 +419,12 @@ function onResizeWindow() {
 
 
 function resetZoom() {
-  pathChartController.resetZoom();
+  pathChart.resetZoom();
 }
 
 
 function onDragStopPathChart(dotChartIndex) {
   var dot = pathChart.series[0].data[dotChartIndex];
-  pathChartController.series[0].data[dotChartIndex][1] = dot[1];
-  new Promise(() => {
-    pathChartController.replot();
-  });
   var kX = 1; // constants.kX
   var dotTableIndex = Math.round(dot[0]/kX);
   var tableData = pathTable.getData();
@@ -520,9 +462,11 @@ function onDotsCountDialogOkClick() {
 
 
 function onPathTableDataEdited(data) {
-  readModifiedWeldingPathData();
-  refreshPathChart(modifiedWeldingPathData);
-  refreshDotsCountLabels(modifiedWeldingPathData);
+  new Promise(() => {
+    readModifiedWeldingPathData();
+    refreshPathChart(modifiedWeldingPathData);
+    refreshDotsCountLabels(modifiedWeldingPathData);
+  });
 }
 
 
@@ -541,6 +485,7 @@ function resizeWeldingData(newSize) {
     }
   }
 
+  filterPath(modifiedWeldingPathData);
   refreshWeldingPathTable(modifiedWeldingPathData);
   refreshPathChart(modifiedWeldingPathData);
   refreshDotsCountLabels(modifiedWeldingPathData);
