@@ -27,6 +27,7 @@ var globalVars = {
   numberOfDotsAddress: '',
   userPath: '',
   homeDir: path.join(process.env.APPDATA, constants.appName),
+  writePathType: '',
   debug: false,
 }
 const configVars  = [
@@ -60,7 +61,7 @@ function createWindow () {
   mainWindow.loadFile('index.html')
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools()
+  //mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', function () {
     mainWindow = null;
@@ -315,8 +316,15 @@ function writePathToSimatic(sender, data) {
   var n = constants.dotsCountMax;
   var i;
 
+  var getY = globalVars.writePathType == 'after'
+    ? item => item.filteredY
+    : item => item.y;
+  var getStatus = globalVars.writePathType == 'after'
+    ? item => true
+    : item => item.status;
+
   for (item of weldingPathData) {
-    yArr.push( item.y );
+    yArr.push( getY(item) );
   }
   for (i = yArr.length; i < n; i++) {
     yArr.push( 0 );
@@ -324,7 +332,7 @@ function writePathToSimatic(sender, data) {
 
   for (item of weldingPathData) {
     yStatus >>= 1;
-    if ( item.status ) {
+    if ( getStatus(item) ) {
         yStatus |= 0x80;
     }
     yStatusBitIndex++;

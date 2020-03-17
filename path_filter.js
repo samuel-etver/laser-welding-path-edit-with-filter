@@ -18,11 +18,38 @@ function filterPathWithDiff(data, options) {
     deltaYmax = options.deltaYmax;
   }
 
-  var arrIn = data.arrIn;
+  var calcAverageWithWindow = function(arr, index) {
+    var a = [];
+    var n = 33;
+    var currIndex = index - (n >> 2);
+    for (var i = 0; i < n; i++) {
+        var value;
+        if ( currIndex < 0 ) {
+          value = arr[0];
+        }
+        else if ( currIndex >= arr.length ) {
+          value = arr[arr.length - 1];
+        }
+        else {
+          value = arr[currIndex];
+        }
+        a.push( value );
+        currIndex++;
+    }
+    a.sort();
+    return a[ n >> 2];
+  }
+
+  var a = filterUtils.interpolate(data.arrIn, data.arrStatus);
+  var b = [];
+  for (var i = 0; i < a.length; i++) {
+    b.push( calcAverageWithWindow(a, i) );
+  }
+
+  var arrIn = b;//data.arrIn;
   var arrStatus = data.arrStatus;
   var arrDeltaYmax = [
-    100 * deltaYmax,
-    10 * deltaYmax,
+//    3 * deltaYmax,
     1 * deltaYmax
   ];
 

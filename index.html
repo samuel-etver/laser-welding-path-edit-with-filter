@@ -13,7 +13,7 @@
     <script src="./node_modules/jqplot/plugins/jqplot.highlighter.js"></script>
     <script src="./node_modules/jqplot/plugins/jqplot.draggable.js"></script>
     <script src="./node_modules/jqplot/plugins/jqplot.enhancedLegendRenderer.js"></script>
-    <script src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <title>Редактор траектории лазерной сварки</title>
   </head>
   <body>
@@ -29,7 +29,17 @@
     <div class="data-space-separator-class" id="data-space-separator"></div>
 
     <div class="chart-space-class container" id="chart-space">
-      <div class="path-chart-class" id="path-chart" style="width:400px; height:300px"></div>
+      <label id="chart-buttons-panel">
+        <label id="zoom-button" class="chart-button-class">
+          <input type="radio" name="chart-buttons-group" id="chart-zoom-state" checked="checked">
+          <img src="./Images/zoom-in.png" class="chart-button-image-class"></img>
+        </label>
+        <label id="drag-button" class="chart-button-class">
+          <input type="radio" name="chart-buttons-group" id="chart-drag-state">
+          <img src="./Images/drag.png" class="chart-button-image-class"></img>
+        </label>
+      </label>
+      <div class="path-chart-class" id="path-chart" style="width:400px; height:300px;"></div>
     </div>
 
     <div class="table-space-class" id="table-space">
@@ -43,17 +53,17 @@
           <tbody>
             <tr>
               <td>Всего</td>
-              <td><label id="all-dots-count-label"></label></td>
+              <td><label id="all-dots-count-label">0</label></td>
               <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" onclick="onOpenDotsCountDialog()">...</button></td>
             </tr>
             <tr>
               <td>Хорошие</td>
-              <td><label id="good-dots-count-label"></label></td>
+              <td><label id="good-dots-count-label">0</label></td>
               <td></td>
             </tr>
             <tr>
               <td>Плохие</td>
-              <td><label id="bad-dots-count-label"></label></td>
+              <td><label id="bad-dots-count-label">0</label></td>
               <td></td>
             </tr>
           </tbody>
@@ -198,17 +208,28 @@
                 <td class="bottom-bordered">IP-адрес контроллера:</td>
                 <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-ip"></span></td>
               </tr>
-              <tr>
-                <td class="bottom-bordered">Блок данных:</td>
-                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-block-number"></span></td>
+              <tr class="bottom-bordered">
+                <td>Данные</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2">
+                  <div class="input-group input-group-sm">
+                    <select class="custom-select btn-sm" id="write-confirmation-modal-dialog-path-select">
+                      <option selected value="1">До фильтра</option>
+                      <option          value="2">После фильтра</option>
+                    </select>
+                  </div>
+                </td>
               </tr>
-              <tr>
-                <td class="bottom-bordered">Адрес количества точек:</td>
-                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-number-of-dots-address"></span></td>
+              <tr class="bottom-bordered">
+                <td>Блок данных:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-block-number"></span></td>
               </tr>
-              <tr>
-                <td class="bottom-bordered">Адрес массива точек:</td>
-                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-y-array-address"></span></td>
+              <tr class="bottom-bordered">
+                <td>Адрес количества точек:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-number-of-dots-address"></span></td>
+              </tr>
+              <tr class="bottom-bordered">
+                <td>Адрес массива точек:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-y-array-address"></span></td>
               </tr>
               <tr>
                 <td>Адрес массива статусов точек:</td>

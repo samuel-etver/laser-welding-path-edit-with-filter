@@ -9,6 +9,9 @@ var writeButton
 var resetModificationButton
 var resetZoomButton
 var exitButton
+var zoomButton
+var dragButton
+var chartButtonsPanel
 var allDotsCountLabel
 var badDotsCountLabel
 var goodDotsCountLabel
@@ -20,7 +23,6 @@ var dataSpaceSeparator
 var tableSpace
 var chartSpace
 var draggedDotIndex
-
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
@@ -57,16 +59,19 @@ window.onload = function() {
   resetZoomButton.addEventListener('click', resetZoom);
 
   exitButton = document.getElementById('exit-button');
-  exitButton.addEventListener('click', () => { window.close(); });
+  exitButton.addEventListener('click', () => window.close());
+
+  zoomButton = document.getElementById('zoom-button');
+  zoomButton.addEventListener('click', onChartButtonClick);
+
+  dragButton = document.getElementById('drag-button');
+  dragButton.addEventListener('click', onChartButtonClick);
+
+  chartButtonsPanel = document.getElementById('chart-buttons-panel');
 
   allDotsCountLabel = document.getElementById('all-dots-count-label');
-  allDotsCountLabel.textContent = '0';
-
   badDotsCountLabel = document.getElementById('bad-dots-count-label');
-  badDotsCountLabel.textContent = '0';
-
   goodDotsCountLabel = document.getElementById('good-dots-count-label');
-  goodDotsCountLabel.textContent = '0';
 
   dataSpaceSeparator = document.getElementById('data-space-separator');
 
@@ -100,7 +105,7 @@ window.onload = function() {
         }
       ],
       cursor: {
-        show: true,
+        style: 'auto',
         zoom: true,
         tooltipLocation: 'sw'
       },
@@ -129,7 +134,7 @@ window.onload = function() {
         gridLineColor: '#555555',
       },
       gridPadding: {
-        top:    20,
+        top:    22,
         bottom: 24,
         left:   80,
         right:  20
@@ -140,9 +145,9 @@ window.onload = function() {
           renderer: $.jqplot.EnhancedLegendRenderer,
           rendererOptions: {
               numberColumns: 2,
+              seriesToggleReplot: true,
           }
-      },
-
+      }
     }
   );
   pathChart.series[0].plugins.draggable.constrainTo = 'y';
@@ -150,6 +155,15 @@ window.onload = function() {
 
   $('#path-chart').bind('jqplotDragStart', (ev, seriesIndex, pointIndex) => { draggedDotIndex = pointIndex; });
   $('#path-chart').bind('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
+
+  pathChart.mx = {
+    options: {
+      draggablePlugin: pathChart.series[0].plugins.draggable,
+      zoomPlugin:      pathChart.plugins.cursor._zoom,
+    }
+  }
+
+  setChartState();
 
   var columnYFormatter =  (cell, formatterParams, onRendered) => {
     var value = cell.getValue();
@@ -262,6 +276,10 @@ function onWriteButtonClick() {
 
 
 function writePathToSimatic() {
+  var el = document.getElementById('write-confirmation-modal-dialog-path-select');
+  ipc.sendSync('set-global', {
+    writePathType: (el == '1' ? 'before' : 'after'),
+  });
   readModifiedWeldingPathData();
   ipc.send('write-path', modifiedWeldingPathData);
 }
@@ -312,7 +330,7 @@ function resetModifiedPathData() {
 }
 
 
-function refreshPathChart(weldingData) {
+function refreshPathChart(weldingData, options) {
   var seriesData = [];
   var filteredData = [];
   var count = weldingData.length;
@@ -333,7 +351,11 @@ function refreshPathChart(weldingData) {
   pathChart.series[1].data = filteredData;
 
   new Promise(() => {
-    pathChart.replot( {resetAxes: true}  );
+    var resetAxes = true;
+    if ( options && options.resetAxes !== undefined) {
+      resetAxes = options.resetAxes;
+    }
+    pathChart.replot( {resetAxes: resetAxes}  );
   });
 }
 
@@ -414,12 +436,30 @@ function onResizeWindow() {
   $('#path-chart').height(chartH);
   pathChart.replot();
 
+ var chartButtonsPanelRect = chartButtonsPanel.getBoundingClientRect();
+ var chartButtonsPanelLeft =
+   chartW - (chartButtonsPanelRect.right - chartButtonsPanelRect.left) - 40;
+ chartButtonsPanel.style.left = chartButtonsPanelLeft + 'px';
+ chartButtonsPanel.style.display = chartButtonsPanelLeft < 0 ? 'none' : 'block';
+
   pathTable.redraw(true);
 }
 
 
 function resetZoom() {
+  var activateZoom = false;
+  if ( !pathChart.plugins.cursor._zoom ) {
+    pathChart.plugins.cursor._zoom = pathChart.mx.options.zoomPlugin;
+    activateZoom = true;
+  }
+
   pathChart.resetZoom();
+
+  if ( activateZoom ) {
+    pathChart.plugins.cursor._zoom = undefined;
+  }
+
+  pathChart.replot ( { resetAxes: true} );
 }
 
 
@@ -431,6 +471,12 @@ function onDragStopPathChart(dotChartIndex) {
   tableData[dotTableIndex].y = dot[1];
   new Promise(() => {
     pathTable.replaceData(tableData);
+    readModifiedWeldingPathData();
+    filterPath(modifiedWeldingPathData);
+    refreshWeldingPathTable(modifiedWeldingPathData);
+    refreshPathChart(modifiedWeldingPathData, {
+      resetAxes: false,
+    });
   });
 }
 
@@ -464,7 +510,9 @@ function onDotsCountDialogOkClick() {
 function onPathTableDataEdited(data) {
   new Promise(() => {
     readModifiedWeldingPathData();
-    refreshPathChart(modifiedWeldingPathData);
+    filterPath(modifiedWeldingPathData);
+    refreshPathChart(modifiedWeldingPathData, { resetAxes: false });
+    refreshWeldingPathTable(modifiedWeldingPathData);
     refreshDotsCountLabels(modifiedWeldingPathData);
   });
 }
@@ -571,4 +619,20 @@ function openConfirmationDialog(msg, func) {
   document.getElementById('confirmation-modal-body').innerHTML = msg;
   document.getElementById('confirmation-modal-dialog-yes-button').onclick = () => { func&&func(); };
   $('#confirmation-modal-dialog').modal('show');
+}
+
+function onChartButtonClick() {
+  setChartState();
+}
+
+function setChartState() {
+  var zoomActivated = document.getElementById('chart-zoom-state').checked;
+  var dragActivated = document.getElementById('chart-drag-state').checked;
+
+  pathChart.series[0].plugins.draggable = dragActivated
+   ? pathChart.mx.options.draggablePlugin
+   : undefined;
+  pathChart.plugins.cursor._zoom = zoomActivated
+   ? pathChart.plugins.cursor._zoom = pathChart.mx.options.zoomPlugin
+   : undefined;
 }
