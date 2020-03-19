@@ -373,7 +373,7 @@ function filterPath(weldingData) {
         arrStatus: arrStatus
     },
     {
-      deltaYmax: 0.01,
+      deltaYmax: 0.001,
     }
   );
 

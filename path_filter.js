@@ -18,69 +18,61 @@ function filterPathWithDiff(data, options) {
     deltaYmax = options.deltaYmax;
   }
 
-  var calcAverageWithWindow = function(arr, index) {
-    var a = [];
-    var n = 33;
-    var currIndex = index - (n >> 2);
-    for (var i = 0; i < n; i++) {
-        var value;
+  var calcAverageWithWindow = function(arrIn, index) {
+    var arrOut = [];
+    var wndSize = 33;
+    var currIndex = index - (wndSize >> 2);
+    for (var i = 0; i < wndSize; i++) {
         if ( currIndex < 0 ) {
-          value = arr[0];
+          var value = arrIn[0];
         }
-        else if ( currIndex >= arr.length ) {
-          value = arr[arr.length - 1];
+        else if ( currIndex >= arrIn.length ) {
+          value = arrIn[arrIn.length - 1];
         }
         else {
-          value = arr[currIndex];
+          value = arrIn[currIndex];
         }
-        a.push( value );
+        arrOut.push( value );
         currIndex++;
     }
-    a.sort();
-    return a[ n >> 2];
+    arrOut.sort();
+    return arrOut[wndSize >> 2];
   }
 
-  var a = filterUtils.interpolate(data.arrIn, data.arrStatus);
-  var b = [];
-  for (var i = 0; i < a.length; i++) {
-    b.push( calcAverageWithWindow(a, i) );
-  }
-
-  var arrIn = b;//data.arrIn;
   var arrStatus = data.arrStatus;
-  var arrDeltaYmax = [
-//    3 * deltaYmax,
-    1 * deltaYmax
-  ];
-
-  for (deltaYmax of arrDeltaYmax) {
-    var arrXY = filterUtils.buildArrayXY(arrIn, arrStatus);
-    if ( arrXY.length == 0 ) {
-      return undefined;
-    }
-    if ( arrXY.length == 1 ) {
-      return filterUtils.interpolate(arrIn, arrStatus);
-    }
-
-    var factors = filterUtils.calcFactors3( arrXY );
-    var calcY = x => filterUtils.calcPolinom3(factors, x);
-    var n = arrIn.length;
-
-    var y0 = arrStatus[0]
-      ? arrIn[0]
-      : calcY(0);
-    for (var i = 1; i < n; i++) {
-      var y1 = arrStatus[i]
-        ? arrIn[i]
-        : (y0 + calcY(i) - calcY(i - 1));
-      if ( Math.abs(y1 - y0) > deltaYmax ) {
-        arrStatus[i] = 0;
-      }
-      y0 = y1;
-    }
+  var arrInterpolated = filterUtils.interpolate(data.arrIn, arrStatus);
+  var n = arrInterpolated.length;
+  var arrIn = [];
+  for (var i = 0; i < n; i++) {
+    arrIn.push( calcAverageWithWindow(arrInterpolated, i) );
   }
 
-  return filterUtils.interpolate(arrIn, arrStatus);
+  var arrXY = filterUtils.buildArrayXY(arrIn, arrStatus);
+  if ( arrXY.length == 0 ) {
+    return undefined;
+  }
+  if ( arrXY.length <= 2 ) {
+    return filterUtils.interpolate(arrIn, arrStatus);
+  }
+
+  var factors = filterUtils.calcFactors3( arrXY );
+  var calcY = x => filterUtils.calcPolinom3(factors, x);
+  var n = arrIn.length;
+  var y0 = arrStatus[0]
+    ? arrIn[0]
+    : calcY(0);
+  for (var i = 1; i < n; i++) {
+    var y1 = arrStatus[i]
+      ? arrIn[i]
+      : (y0 + calcY(i) - calcY(i - 1));
+    if ( Math.abs(y1 - y0) > deltaYmax ) {
+      arrStatus[i] = 0;
+    }
+    y0 = y1;
+  }
+
+//  return filterUtils.interpolate(arrIn, arrStatus);
+  return filterUtils.approximate(arrIn, arrStatus);
 }
 
 
@@ -263,6 +255,151 @@ var filterUtils = {
 
     return arrOut;
   },
+
+  approximate: function(arrIn, arrStatus, options) {
+    var countMin = 50;
+    var sliceSize = 200;
+    var overloadSize = 100;
+
+    if ( options ) {
+      if ( options.countMin ) {
+        countMin = options.countMin;
+      }
+      if ( options.sliceSize ) {
+        sliceSize = options.sliceSize;
+      }
+      if ( options.overloadSize ) {
+        oveloadSize = options.overloadSize;
+      }
+    }
+
+    var dotsCount = arrIn.length;
+    var goodDotsCount = this.getTrueCount(arrStatus);
+    if ( goodDotsCount < countMin ) {
+      return this.iterpolate(arrIn, arrStatus);
+    }
+
+    var sliceCount = ((goodDotsCount - overloadSize) / (sliceSize - overloadSize))  >> 0;
+    if ( sliceCount < 1 ) {
+      sliceCount = 1;
+    }
+    if (sliceCount == 1) {
+      sliceSize = goodDotsCount;
+    }
+    else {
+      sliceSize =  overloadSize + (((goodDotsCount - overloadSize) / sliceCount) >> 0);
+    }
+    var firstSliceSize = sliceCount == 1
+      ? goodDotsCount
+      : (goodDotsCount - (sliceSize - overloadSize)*(sliceCount - 1));
+
+
+    var arrSlices = [];
+    var arrCurrY = [];
+    var arrNextY = [];
+    var arrCurrStatus = [];
+    var arrNextStatus = [];
+    var currSliceSize = firstSliceSize;
+    var currItemIndex = 0;
+    var nextI = 0;
+    var currStartI = 0;
+
+    for (var sliceIndex = 0; sliceIndex < sliceCount; sliceIndex++) {
+      for (var i = currStartI; i < currSliceSize; ) {
+        var y      = arrIn[currItemIndex];
+        var status = arrStatus[currItemIndex];
+        arrCurrY.push( y );
+        arrCurrStatus.push( status );
+
+        if ( i >= (currSliceSize - overloadSize) ) {
+          if ( arrNextY.startIndex === undefined ) {
+            arrNextY.startIndex = currItemIndex;
+          }
+          arrNextY.push( y );
+          arrNextStatus.push( status );
+          if ( status ) {
+            nextI++;
+          }
+        }
+
+        if ( status ) {
+          i++;
+        }
+
+        currItemIndex++;
+      }
+
+      arrSlices.push({
+        arrY: arrCurrY,
+        arrStatus: arrCurrStatus
+      });
+      currSliceSize = sliceSize;
+      arrNextY.endIndex = currItemIndex;
+      arrCurrY = arrNextY;
+      arrCurrStatus = arrNextStatus;
+      arrNextY = [];
+      arrNextStatus = [];
+      currStartI = nextI;
+      nextI = 0;
+    }
+
+
+    arrCurrY = arrSlices[arrSlices.length - 1].arrY;
+    arrStatusY = arrSlices[arrSlices.length - 1].arrStatus;
+    while (currItemIndex < dotsCount) {
+      arrCurrY.push( arrIn[currItemIndex] );
+      arrCurrStatus.push ( 0 );
+      currItemIndex++;
+    }
+
+    var arrAllFactors = [];
+    for (sliceIndex = 0; sliceIndex < sliceCount; sliceIndex++) {
+      var currSlice = arrSlices[sliceIndex];
+      var arrCurrXY = this.buildArrayXY(currSlice.arrY, currSlice.arrStatus);
+      var arrCurrFactors = this.calcFactors3(arrCurrXY);
+      arrAllFactors.push( arrCurrFactors );
+    }
+
+
+    var arrOut = [];
+    var n = arrSlices[0].arrY.length;
+    var arrCurrFactors = arrAllFactors[0];
+    var calcY = x => this.calcPolinom3( arrCurrFactors, x);
+    for (var i = 0; i < n; i++) {
+      arrOut.push ( calcY(i) );
+    }
+    for( ; i < dotsCount; i++) {
+      arrOut.push( 0 );
+    }
+    var calcWeight = index => (index / (endIndex - startIndex));
+
+
+    for (sliceIndex = 1; sliceIndex < sliceCount; sliceIndex++) {
+      var currSlice = arrSlices[sliceIndex];
+      currArrY = currSlice.arrY;
+      currArrayStatus = currSlice.arrStatus;
+      n = currArrY.length;
+      var startIndex = currArrY.startIndex;
+      var endIndex   = currArrY.endIndex;
+      var currDotIndex = startIndex;
+      arrCurrFactors = arrAllFactors[sliceIndex];
+      for (i = 0; i < n; i++) {
+        if ( currDotIndex < endIndex ) {
+          var weight = calcWeight(i);
+          arrOut[currDotIndex] =
+            arrOut[currDotIndex] * (1 - weight) +
+            calcY(i) * weight;
+        }
+        else {
+          arrOut[currDotIndex] = calcY(i);
+        }
+        currDotIndex++;
+      }
+    }
+
+    return arrOut;
+    //return this.interpolate(arrIn, arrStatus);
+  }
 }
 
 
