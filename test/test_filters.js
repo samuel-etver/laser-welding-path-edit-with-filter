@@ -51,7 +51,7 @@ describe('Least Squares Method Test', () => {
         ain.forEach(a => aout.push(a == errVal ? 0 : 1));
         return aout;
     }
-    
+
     it('Using Least Squares Method', () => {
         let dots     = [0, 1, 2, errVal, errVal, 5, 6, errVal];
         let statuses = buildStatuses( dots );
@@ -60,7 +60,7 @@ describe('Least Squares Method Test', () => {
         expect(result[1]).to.be.closeTo(1.0, 1e-7);
         expect(result[2]).to.be.closeTo(0.0, 1e-7);
     });
-    
+
     it('Using Least Squares Method', () => {
         let dots     = [0.1, 0.1, 0.2, 0.2, 0.0, 0.0];
         let statuses = buildStatuses( dots );
@@ -69,7 +69,7 @@ describe('Least Squares Method Test', () => {
         expect(result[1]).to.be.closeTo(  0.08428571, 1e-7);
         expect(result[2]).to.be.closeTo(  0.08571428, 1e-7);
     });
-    
+
     it('Using Least Squares Method', () => {
         let dots     = [0.1, 0.1, 0.2, 0.2, 0.0, 0.0, errVal];
         let statuses = buildStatuses( dots );
@@ -97,8 +97,8 @@ describe('Polinom Calcuation Test', () => {
 describe('Interpolation Test', () => {
     let errVal = -1000;
     let val = 10;
-    
-    it('Interpolating data', () => {   
+
+    it('Interpolating data', () => {
         let arrIn = [errVal, errVal, errVal, val];
         let arrStatus = [0, 0, 0, 1];
         var result = filterUtils.interpolate(arrIn, arrStatus);
@@ -107,8 +107,8 @@ describe('Interpolation Test', () => {
         expect(result[2]).to.be.closeTo(val, 1e-7);
         expect(result[3]).to.be.closeTo(val, 1e-7);
     });
-    
-    it('Interpolating data', () => {   
+
+    it('Interpolating data', () => {
         let arrIn = [val, errVal, errVal, errVal];
         let arrStatus = [1, 0, 0, 0];
         var result = filterUtils.interpolate(arrIn, arrStatus);
@@ -117,8 +117,8 @@ describe('Interpolation Test', () => {
         expect(result[2]).to.be.closeTo(val, 1e-7);
         expect(result[3]).to.be.closeTo(val, 1e-7);
     });
-    
-    it('Interpolating data', () => {   
+
+    it('Interpolating data', () => {
         let arrIn = [errVal, errVal, errVal, errVal];
         let arrStatus = [0, 0, 0, 0];
         var result = filterUtils.interpolate(arrIn, arrStatus);
@@ -128,7 +128,7 @@ describe('Interpolation Test', () => {
         expect(result[3]).to.be.closeTo(0, 1e-7);
     });
 
-    it('Interpolating data', () => {   
+    it('Interpolating data', () => {
         let arrIn = [0, errVal, errVal, 3];
         let arrStatus = [1, 0, 0, 1];
         var result = filterUtils.interpolate(arrIn, arrStatus);
@@ -150,6 +150,21 @@ describe('Diff Filter Test', () => {
         var result = filters.filterPath('diff', inData, {
             deltaXmax: 0.1
         });
-        console.log(result);
+    });
+
+    it('Testing filter. Not checking signal filtering quality!', () => {
+        var arrIn = [];
+        var arrStatus = [];
+        for (var i = 0; i < 1000; i++) {
+          arrIn.push( i + (Math.random() - 0.5)/10 );
+          arrStatus.push( i + ((Math.random() + 0.7) >> 0) );
+        }
+        var inData  = {
+            arrIn: arrIn,
+            arrStatus: arrStatus
+        };
+        var result = filters.filterPath('diff', inData, {
+            deltaXmax: 0.1
+        });
     });
 });

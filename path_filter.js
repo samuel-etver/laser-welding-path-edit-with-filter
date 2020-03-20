@@ -276,7 +276,7 @@ var filterUtils = {
     var dotsCount = arrIn.length;
     var goodDotsCount = this.getTrueCount(arrStatus);
     if ( goodDotsCount < countMin ) {
-      return this.iterpolate(arrIn, arrStatus);
+      return this.interpolate(arrIn, arrStatus);
     }
 
     var sliceCount = ((goodDotsCount - overloadSize) / (sliceSize - overloadSize))  >> 0;
