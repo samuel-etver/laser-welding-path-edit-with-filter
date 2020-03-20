@@ -13,9 +13,9 @@ To clone and run this repository you'll need [Git](https://git-scm.com) and [Nod
 
 ```bash
 # Clone this repository
-git clone https://github.com/samuel-etver/laser-welding-path-edit
+git clone https://github.com/samuel-etver/laser-welding-path-edit-with-filter
 # Go into the repository
-cd laser-welding-path-edit
+cd laser-welding-path-edit-with-filter
 # Install dependencies
 npm install
 # Run the app
