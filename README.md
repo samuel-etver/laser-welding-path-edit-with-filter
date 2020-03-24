@@ -1,6 +1,13 @@
 # laser-welding-path-edit-with-filter
 
+Editor of the Y-coordinate of the path for the laser welding machine for large diameter pipes.
+
 ## Overview
+Using the program, the Y-coordinates of the scanned pipe track are read from the Simatic S-300 controller.
+Values can be changed either in the table or on the chart by dragging points.
+Point status (valid/not valid) can be changed in the table.
+The corrected path(or filtered path) is written back to the controller.
+The path can be saved/loaded in csv or xml-format.<br>
 
 ![](Screenshots/image1.jpg)
 
@@ -11,18 +18,12 @@
 
 To clone and run this repository you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. From your command line: 
 
-```bash
-# Clone this repository
-git clone https://github.com/samuel-etver/laser-welding-path-edit-with-filter
-# Go into the repository
-cd laser-welding-path-edit-with-filter
-# Install dependencies
-npm install
-# Run the app
-npm start
-# Build the app for Windows (64bit)
-electron-packager . --platform=win32 --arch=x64
-```
+1. Clone this repository ```https://github.com/samuel-etver/laser-welding-path-edit-with-filter```
+2. Go into the repository ```cd laser-welding-path-edit-with-filter```
+3. Install dependencies ```npm install```
+4. You should download jgplot plugins from https://github.com/jqPlot/jqPlot to .\node-modules\jqplot\plugins
+5. Run the app ```npm start```
+6. Build the app for Windows (64bit) ```electron-packager . --platform=win32 --arch=x64```
   
 ## Dependencies
 
