@@ -238,6 +238,7 @@ window.onload = function() {
 function readPathFromSimatic() {
   ipc.on('read-path-reply', (event, arg) => {
     originalWeldingPathData = arg;
+    filterPath(originalWeldingPathData);
     refreshWeldingPathTable(originalWeldingPathData);
     refreshPathChart(originalWeldingPathData);
     refreshDotsCountLabels(originalWeldingPathData);
@@ -278,9 +279,10 @@ function onWriteButtonClick() {
 function writePathToSimatic() {
   var el = document.getElementById('write-confirmation-modal-dialog-path-select');
   ipc.sendSync('set-global', {
-    writePathType: (el == '1' ? 'before' : 'after'),
+    writePathType: (el.value == '1' ? 'before' : 'after'),
   });
   readModifiedWeldingPathData();
+  filterPath(modifiedWeldingPathData);
   ipc.send('write-path', modifiedWeldingPathData);
 }
 
@@ -373,7 +375,7 @@ function filterPath(weldingData) {
         arrStatus: arrStatus
     },
     {
-      deltaYmax: 0.001,
+      deltaYmax: 0.01,
     }
   );
 
