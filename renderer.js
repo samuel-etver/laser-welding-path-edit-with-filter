@@ -9,6 +9,7 @@ var writeButton
 var resetModificationButton
 var resetZoomButton
 var exitButton
+var yOffsetButton
 var zoomButton
 var dragButton
 var chartButtonsPanel
@@ -23,6 +24,7 @@ var dataSpaceSeparator
 var tableSpace
 var chartSpace
 var draggedDotIndex
+var yOffset = 0
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
@@ -40,6 +42,9 @@ window.onload = function() {
   ipc.on('open-options-dialog', () => onOpenOptionsDialog());
   ipc.on('open-error-dialog', (event, arg) => onOpenErrorDialog(arg));
   ipc.on('open-write-success-dialog', () => onOpenWriteSuccessDialog());
+
+  yOffsetButton = document.getElementById('y-offset-button');
+  yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
 
   readButton = document.getElementById('read-button');
   readButton.addEventListener('click', readPathFromSimatic);
@@ -319,6 +324,7 @@ function readModifiedWeldingPathData() {
 
 
 function resetModifiedPathData() {
+  yOffset = 0;
   var newModified = [];
   for (var item of originalWeldingPathData) {
     newModified.push( [].concat(item) );
@@ -379,9 +385,14 @@ function filterPath(weldingData) {
     }
   );
 
+
   var n = arrIn.length;
+  var offset = parseFloat(yOffset);
+  if ( isNaN(offset) ) {
+    offset = 0;
+  }
   for (var i = 0; i < n; i++) {
-    weldingData[i].filteredY = arrOut[i];
+    weldingData[i].filteredY = arrOut[i] + offset;
   }
 }
 
@@ -442,7 +453,6 @@ function onResizeWindow() {
  var chartButtonsPanelLeft =
    chartW - (chartButtonsPanelRect.right - chartButtonsPanelRect.left) - 40;
  chartButtonsPanel.style.left = chartButtonsPanelLeft + 'px';
- chartButtonsPanel.style.display = chartButtonsPanelLeft < 0 ? 'none' : 'block';
 
   pathTable.redraw(true);
 }
@@ -637,4 +647,26 @@ function setChartState() {
   pathChart.plugins.cursor._zoom = zoomActivated
    ? pathChart.plugins.cursor._zoom = pathChart.mx.options.zoomPlugin
    : undefined;
+}
+
+
+function onOpenYOffsetDialog() {
+  var input = document.getElementById('y-offset-modal-input');
+  input.value = yOffset;
+  $('#y-offset-modal-dialog').modal('show');
+}
+
+
+function onYOffserDialogOkClick() {
+  var input = document.getElementById('y-offset-modal-input');
+  yOffset = input.value;
+  $('#y-offset-modal-dialog').modal('hide');
+  new Promise(() => {
+    readModifiedWeldingPathData();
+    filterPath(modifiedWeldingPathData);
+    refreshWeldingPathTable(modifiedWeldingPathData);
+    refreshPathChart(modifiedWeldingPathData, {
+      resetAxes: false,
+    });
+  });
 }

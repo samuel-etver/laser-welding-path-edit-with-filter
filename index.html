@@ -29,7 +29,10 @@
     <div class="data-space-separator-class" id="data-space-separator"></div>
 
     <div class="chart-space-class container" id="chart-space">
-      <label id="chart-buttons-panel">
+      <div id="chart-buttons-panel">
+        <button id="y-offset-button" class="chart-button-class9">
+            <img src="./Images/up-down.png" class="hart-button-image-class"></img>
+        </button>
         <label id="zoom-button" class="chart-button-class">
           <input type="radio" name="chart-buttons-group" id="chart-zoom-state" checked="checked">
           <img src="./Images/zoom-in.png" class="chart-button-image-class"></img>
@@ -38,7 +41,7 @@
           <input type="radio" name="chart-buttons-group" id="chart-drag-state">
           <img src="./Images/drag.png" class="chart-button-image-class"></img>
         </label>
-      </label>
+      </div>
       <div class="path-chart-class" id="path-chart" style="width:400px; height:300px;"></div>
     </div>
 
@@ -289,6 +292,33 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" data-dismiss="modal" id="confirmation-modal-dialog-yes-button">Да</button>
             <button type="button" class="btn btn-primary" data-dismiss="modal">Нет</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- dots counts modal dialog -->
+    <div class="modal" id="y-offset-modal-dialog">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h6 class="modal-title">Добавить смещение по оси Y</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="d-flex flex-row align-items-center">
+              <input type="text" id="y-offset-modal-input" class="form-control">
+              <span style="margin-left: 16px">мм</span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="onYOffserDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
           </div>
 
         </div>

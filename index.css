@@ -107,12 +107,14 @@ body {
 }
 
 #chart-buttons-panel {
+  display: flex;
+  flex-direction: row;
   white-space: nowrap;
   overflow: hidden;
   z-index: 10;
   position: absolute;
   top: 2px;
-  width: 80px;
+  width: 100px;
   height: 20px;
 }
 
@@ -122,9 +124,11 @@ body {
 
 #chart-buttons-panel .chart-button-class {
   position: relative;
+  display: flex;
   padding: 0;
-  margin: 0px 2px;
+  margin: 0px 1px;
   width: 32px;
+  height: inherit;
 }
 
 #chart-buttons-panel input:checked ~ .chart-button-image-class {
@@ -136,8 +140,10 @@ body {
   margin: 0px;
   position: absolute;
   top: 0;
-  left: 0;
+  left: 0px;
   border-radius: 1px;
+  width: inherit;
+  height: inherit;
 }
 
 .chart-button-image-class {
@@ -149,20 +155,42 @@ body {
   margin: 0px;
   position: absolute;
   top: 0;
-  left: 0;
+  left: 0px;
   border-radius: 1px;
+  width: inherit;
+  height: inherit;
 }
 
 
 #write-confirmation-modal-dialog-values-table {
-    position: relative;
-    margin-left: 2rem;
+  position: relative;
+  margin-left: 2rem;
 }
 
 .bottom-bordered {
-   border-bottom: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
 }
 
 .write-confirmation-modal-dialog-values-table-column2 {
-   padding-left: 1rem;
+  padding-left: 1rem;
+}
+
+#y-offset-button {
+  padding: 0;
+  position: relative;
+  width: 32px;
+  height: 20px;
+  box-sizing: border-box;
+  margin: 0 0px;
+  background-color: #aa77ff;
+  outline-style: none;
+  border-color: pink;
+  border-radius: 1px;
+  border-width: 1px;
+}
+
+#y-offset-button img {
+  position: absolute;
+  top: 0px;
+  left: 0px;
 }
