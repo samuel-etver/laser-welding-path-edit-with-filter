@@ -19,25 +19,25 @@
   <body>
 
     <div style="margin-left:8px; margin-top:8px; white-space:nowrap;">
-      <button class="btn btn-primary" id="read-button">Считать</button>
-      <button class="btn btn-primary ml-2" id="write-button">Записать</button>
-      <button class="btn btn-secondary ml-2" id="reset-modification-button">Отмена изменений</button>
-      <button class="btn btn-secondary ml-2" id="reset-zoom-button">Сброс масштаба</button>
-      <button class="btn btn-warning ml-2" id="exit-button">Выход</button>
+      <button class="btn btn-primary" id="read-button" tabindex="-1">Считать</button>
+      <button class="btn btn-primary ml-2" id="write-button" tabindex="-1">Записать</button>
+      <button class="btn btn-secondary ml-2" id="reset-modification-button" tabindex="-1">Отмена изменений</button>
+      <button class="btn btn-secondary ml-2" id="reset-zoom-button" tabindex="-1">Сброс масштаба</button>
+      <button class="btn btn-warning ml-2" id="exit-button" tabindex="-1">Выход</button>
     </div>
 
     <div class="data-space-separator-class" id="data-space-separator"></div>
 
     <div class="chart-space-class container" id="chart-space">
       <div id="chart-buttons-panel">
-        <button id="y-offset-button" class="chart-button-class9">
+        <button id="y-offset-button" class="chart-button-class" tabindex="-1">
             <img src="./Images/up-down.png" class="hart-button-image-class"></img>
         </button>
-        <label id="zoom-button" class="chart-button-class">
+        <label id="zoom-button" class="chart-button-class" tabindex="-1">
           <input type="radio" name="chart-buttons-group" id="chart-zoom-state" checked="checked">
           <img src="./Images/zoom-in.png" class="chart-button-image-class"></img>
         </label>
-        <label id="drag-button" class="chart-button-class">
+        <label id="drag-button" class="chart-button-class" tabindex="-1">
           <input type="radio" name="chart-buttons-group" id="chart-drag-state">
           <img src="./Images/drag.png" class="chart-button-image-class"></img>
         </label>
@@ -57,7 +57,7 @@
             <tr>
               <td>Всего</td>
               <td><label id="all-dots-count-label">0</label></td>
-              <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" onclick="onOpenDotsCountDialog()">...</button></td>
+              <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" tabindex="-1" onclick="onOpenDotsCountDialog()">...</button></td>
             </tr>
             <tr>
               <td>Хорошие</td>
@@ -83,11 +83,11 @@
 
           <div class="modal-header">
             <h4 class="modal-title">Количество точек</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
           </div>
 
           <div class="modal-body">
-            <input type="text" id="dots-count-modal-input" class="form-control">
+            <input type="text" id="dots-count-modal-input" class="form-control first-focus">
           </div>
 
           <div class="modal-footer">
@@ -107,14 +107,14 @@
 
           <div class="modal-header">
             <h4 class="modal-title">Настройки</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
           </div>
 
           <div class="modal-body">
             <form style="margin: 2px">
               <div class="form-group">
                 <label for="ip-input">IP</label>
-                <input class="form-control" id="ip-input">
+                <input class="form-control first-focus" id="ip-input">
               </div>
 
               <div class="form-group" style="margin-top:30;">
@@ -177,14 +177,14 @@
         <div class="modal-header">
           <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
           <h4 class="modal-title" style="margin: auto 0" >Ошибка!</h4>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
         </div>
 
         <div class="modal-body" id="error-modal-body">
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Закрыть</button>
+          <button type="button" class="btn btn-primary first-focus" data-dismiss="modal">Закрыть</button>
         </div>
 
       </div>
@@ -200,7 +200,7 @@
           <div class="modal-header">
             <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
             <h4 class="modal-title" style="margin: auto 0" >Внимание!</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
           </div>
 
           <div class="modal-body">
@@ -242,7 +242,7 @@
           </div>
 
           <div class="modal-footer">
-          <button type="button" class="btn btn-primary" onclick="writePathToSimatic();" data-dismiss="modal">Записать</button>
+          <button type="button" class="btn btn-primary first-focus" onclick="writePathToSimatic();" data-dismiss="modal">Записать</button>
             <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
           </div>
 
@@ -259,7 +259,7 @@
           <div class="modal-header">
             <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
             <h4 class="modal-title" style="margin: auto 0" >Внимание!</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
           </div>
 
           <div class="modal-body">
@@ -267,7 +267,7 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Закрыть</button>
+            <button type="button" class="btn btn-primary first-focus" data-dismiss="modal">Закрыть</button>
           </div>
 
         </div>
@@ -283,14 +283,14 @@
           <div class="modal-header">
             <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
             <h4 class="modal-title" style="margin: auto 0" >Внимание!</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
           </div>
 
           <div class="modal-body" id="confirmation-modal-body">
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal" id="confirmation-modal-dialog-yes-button">Да</button>
+            <button type="button" class="btn btn-primary first-focus" data-dismiss="modal" id="confirmation-modal-dialog-yes-button">Да</button>
             <button type="button" class="btn btn-primary" data-dismiss="modal">Нет</button>
           </div>
 
@@ -299,26 +299,26 @@
     </div>
 
 
-    <!-- dots counts modal dialog -->
+    <!-- y-offset modal dialog -->
     <div class="modal" id="y-offset-modal-dialog">
       <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
 
           <div class="modal-header">
             <h6 class="modal-title">Добавить смещение по оси Y</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
           </div>
 
           <div class="modal-body">
             <div class="d-flex flex-row align-items-center">
-              <input type="text" id="y-offset-modal-input" class="form-control">
+              <input type="text" id="y-offset-modal-input" class="form-control first-focus focusable">
               <span style="margin-left: 16px">мм</span>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="onYOffserDialogOkClick();">Ввод</button>
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-primary focusable" onclick="onYOffserDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
         </div>

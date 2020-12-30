@@ -235,6 +235,8 @@ window.onload = function() {
     dataEdited: onPathTableDataEdited,
   });
 
+  prepareDialogs();
+
   window.addEventListener('resize', event => onResizeWindow(event));
   onResizeWindow()
 }
@@ -669,4 +671,45 @@ function onYOffserDialogOkClick() {
       resetAxes: false,
     });
   });
+}
+
+
+function prepareDialogs() {
+  let dialogList = $(".modal");
+  for(let dialog of dialogList) {
+    if(dialog.id) {
+      let id = '#' + dialog.id;
+      let firstEl = dialog.querySelector(".first-focus");
+
+      let elementsList = Array.from(dialog.getElementsByClassName("focusable"));
+      if (elementsList.length && !firstEl) {
+        firstEl = elementsList[0];
+      }
+
+      $(id).on('shown.bs.modal', function() {
+        firstEl && firstEl.focus();
+      });
+
+      $(id).keydown(function(event) {
+        if (event.which == 9) {
+          event.preventDefault();
+          let focusEl = document.activeElement;
+          let index = elementsList.findIndex(el => el == focusEl);
+          if (index >= 0) {
+            if (event.shiftKey) {
+              if (--index < 0) {
+                index = elementsList.length - 1;
+              }
+            }
+            else {
+              if (++index >= elementsList.length) {
+                index = 0;
+              }
+            }
+            elementsList[index].focus();
+          }
+        }
+      });
+    }
+  }
 }

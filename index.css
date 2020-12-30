@@ -194,3 +194,8 @@ body {
   top: 0px;
   left: 0px;
 }
+
+
+.close:active {
+  outline-style: none;
+}
