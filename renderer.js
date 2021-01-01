@@ -680,6 +680,7 @@ function prepareDialogs() {
     if(dialog.id) {
       let id = '#' + dialog.id;
       let firstEl = dialog.querySelector(".first-focus");
+      let defaultEl = dialog.querySelector(".default-control");
 
       let elementsList = Array.from(dialog.getElementsByClassName("focusable"));
       if (elementsList.length && !firstEl) {
@@ -691,9 +692,10 @@ function prepareDialogs() {
       });
 
       $(id).keydown(function(event) {
+        let focusEl = document.activeElement;
+
         if (event.which == 9) {
           event.preventDefault();
-          let focusEl = document.activeElement;
           let index = elementsList.findIndex(el => el == focusEl);
           if (index >= 0) {
             if (event.shiftKey) {
@@ -707,6 +709,17 @@ function prepareDialogs() {
               }
             }
             elementsList[index].focus();
+          }
+        }
+
+        if (event.which == 13 && defaultEl) {
+          switch(focusEl.tagName.toLowerCase()) {
+            case "button":
+            case "select":
+              break;
+            default:
+              event.preventDefault();
+              defaultEl.click();
           }
         }
       });

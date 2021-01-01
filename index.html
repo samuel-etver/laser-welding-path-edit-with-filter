@@ -87,12 +87,12 @@
           </div>
 
           <div class="modal-body">
-            <input type="text" id="dots-count-modal-input" class="form-control first-focus">
+            <input type="text" id="dots-count-modal-input" class="form-control first-focus focusable">
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="onDotsCountDialogOkClick();">Ввод</button>
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-primary focusable default-control" onclick="onDotsCountDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
         </div>
@@ -114,7 +114,7 @@
             <form style="margin: 2px">
               <div class="form-group">
                 <label for="ip-input">IP</label>
-                <input class="form-control first-focus" id="ip-input">
+                <input class="form-control first-focus focusable" id="ip-input">
               </div>
 
               <div class="form-group" style="margin-top:30;">
@@ -123,7 +123,7 @@
                   <div class="input-group-prepend">
                     <span class="input-group-text">DB</span>
                   </div>
-                  <input class="form-control" id="block-number-input">
+                  <input class="form-control focusable" id="block-number-input">
                 </div>
               </div>
 
@@ -133,7 +133,7 @@
                   <div class="input-group-prepend">
                     <span class="input-group-text">Адрес</span>
                   </div>
-                  <input class="form-control" id="number-of-dots-address-input">
+                  <input class="form-control focusable" id="number-of-dots-address-input">
                 </div>
               </div>
 
@@ -143,7 +143,7 @@
                   <div class="input-group-prepend">
                     <span class="input-group-text">Адрес</span>
                   </div>
-                  <input class="form-control" id="y-array-address-input">
+                  <input class="form-control focusable" id="y-array-address-input">
                 </div>
               </div>
 
@@ -153,15 +153,15 @@
                   <div class="input-group-prepend">
                     <span class="input-group-text">Адрес</span>
                   </div>
-                  <input class="form-control" id="y-status-array-address-input">
+                  <input class="form-control focusable" id="y-status-array-address-input">
                 </div>
               </div>
             </form>
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="onOptionsDialogOkClick();">Ввод</button>
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-primary focusable default-control" onclick="onOptionsDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
         </div>
@@ -184,7 +184,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary first-focus" data-dismiss="modal">Закрыть</button>
+          <button type="button" class="btn btn-primary first-focus focusable default-control" data-dismiss="modal">Закрыть</button>
         </div>
 
       </div>
@@ -215,7 +215,7 @@
                 <td>Данные:</td>
                 <td class="write-confirmation-modal-dialog-values-table-column2">
                   <div class="input-group input-group-sm">
-                    <select class="custom-select btn-sm" id="write-confirmation-modal-dialog-path-select">
+                    <select class="custom-select btn-sm first-focus focusable" id="write-confirmation-modal-dialog-path-select">
                       <option selected value="1">До фильтра</option>
                       <option          value="2">После фильтра</option>
                     </select>
@@ -242,8 +242,8 @@
           </div>
 
           <div class="modal-footer">
-          <button type="button" class="btn btn-primary first-focus" onclick="writePathToSimatic();" data-dismiss="modal">Записать</button>
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-primary focusable default-control" onclick="writePathToSimatic();" data-dismiss="modal">Записать</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
         </div>
@@ -267,7 +267,7 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary first-focus" data-dismiss="modal">Закрыть</button>
+            <button type="button" class="btn btn-primary first-focus focusable default-control" data-dismiss="modal">Закрыть</button>
           </div>
 
         </div>
@@ -290,8 +290,8 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary first-focus" data-dismiss="modal" id="confirmation-modal-dialog-yes-button">Да</button>
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Нет</button>
+            <button type="button" class="btn btn-primary first-focus focusable default-control" data-dismiss="modal" id="confirmation-modal-dialog-yes-button">Да</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Нет</button>
           </div>
 
         </div>
@@ -317,7 +317,7 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary focusable" onclick="onYOffserDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary focusable default-control" onclick="onYOffserDialogOkClick();">Ввод</button>
             <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
