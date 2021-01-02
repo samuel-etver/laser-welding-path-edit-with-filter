@@ -181,8 +181,7 @@ window.onload = function() {
   var columnYWidth = columnXWidth;
 
   pathTable = new tabulator("#path-table", {
-    autoResize: false,
-    height: "400px",
+    autoResize: true,
     columns:[
       {
         title: "ИНД",
@@ -399,64 +398,14 @@ function filterPath(weldingData) {
 }
 
 function onResizeWindow() {
-  var gap = chartSpace.getBoundingClientRect().left;
-
-  var pathTableOffsets = pathTable.element.getBoundingClientRect();
-  var pathTableW = pathTableOffsets.right - pathTableOffsets.left;
-
-  var tableLeft = window.innerWidth - pathTableW - gap;
-  var top = dataSpaceSeparator.getBoundingClientRect().bottom;
-  tableSpace.style.left = tableLeft + 'px';
-  tableSpace.style.top  = top + 'px';
-  tableSpace.style.width = pathTableW + 'px';
-  var dataSpaceHeight = window.innerHeight - top - gap;
-  if ( dataSpaceHeight < 0 ) {
-    dataSpaceHeight = 0;
-  }
-  tableSpace.style.height = dataSpaceHeight + 'px';
-
-  var dotsCountTableContainer = document.getElementById('dots-count-table-container');
-  var dotsCountTableContainerOffsets = dotsCountTableContainer.getBoundingClientRect();
-
-  var pathTableTop = dotsCountTableContainerOffsets.bottom - dotsCountTableContainerOffsets.top + gap;
-    pathTable.element.style.top = pathTableTop + 'px';
-
-  pathTableOffsets = pathTable.element.getBoundingClientRect();
-  var pathTableHeight = dataSpaceHeight - pathTableTop;
-  if ( pathTableHeight < 0 ) {
-    pathTableHeight = 0;
-  }
-  pathTable.element.style.height = pathTableHeight + 'px';
-
-  dotsCountTableContainer.style.width = (pathTableOffsets.right - pathTableOffsets.left) + 'px';
-
-  chartSpace.style.height = dataSpaceHeight + 'px';
-  var chartSpaceW = tableLeft - 2*gap;
-  if ( chartSpaceW < 0 ) {
-    chartSpaceW = 0;
-  }
-  chartSpace.style.width = chartSpaceW + 'px';
-
-  var chartW = chartSpaceW - 2;
-  if (chartW < 0) {
-    chartW = 0;
-  }
-  var chartH = dataSpaceHeight;
-  if ( chartH < 0 ) {
-      chartH = 0;
-  }
-
-
-  $('#path-chart').width(chartW);
-  $('#path-chart').height(chartH);
   pathChart.replot();
 
- var chartButtonsPanelRect = chartButtonsPanel.getBoundingClientRect();
+/* var chartButtonsPanelRect = chartButtonsPanel.getBoundingClientRect();
  var chartButtonsPanelLeft =
    chartW - (chartButtonsPanelRect.right - chartButtonsPanelRect.left) - 40;
  chartButtonsPanel.style.left = chartButtonsPanelLeft + 'px';
 
-  pathTable.redraw(true);
+  pathTable.redraw(true);*/
 }
 
 

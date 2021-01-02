@@ -18,7 +18,7 @@
   </head>
   <body>
 
-    <div style="margin-left:8px; margin-top:8px; white-space:nowrap;">
+    <div style="margin-top:8px; margin-bottom: 8px; white-space:nowrap;">
       <button class="btn btn-primary" id="read-button" tabindex="-1">Считать</button>
       <button class="btn btn-primary ml-2" id="write-button" tabindex="-1">Записать</button>
       <button class="btn btn-secondary ml-2" id="reset-modification-button" tabindex="-1">Отмена изменений</button>
@@ -26,53 +26,53 @@
       <button class="btn btn-warning ml-2" id="exit-button" tabindex="-1">Выход</button>
     </div>
 
-    <div class="data-space-separator-class" id="data-space-separator"></div>
-
-    <div class="chart-space-class container" id="chart-space">
-      <div id="chart-buttons-panel">
-        <button id="y-offset-button" class="chart-button-class" tabindex="-1">
-            <img src="./Images/up-down.png" class="hart-button-image-class"></img>
-        </button>
-        <label id="zoom-button" class="chart-button-class" tabindex="-1">
-          <input type="radio" name="chart-buttons-group" id="chart-zoom-state" checked="checked">
-          <img src="./Images/zoom-in.png" class="chart-button-image-class"></img>
-        </label>
-        <label id="drag-button" class="chart-button-class" tabindex="-1">
-          <input type="radio" name="chart-buttons-group" id="chart-drag-state">
-          <img src="./Images/drag.png" class="chart-button-image-class"></img>
-        </label>
+    <div class="data-space-class">
+      <div class="chart-space-class" id="chart-space">
+        <div id="chart-buttons-panel">
+          <button id="y-offset-button" class="chart-button-class" tabindex="-1">
+              <img src="./Images/up-down.png" class="chart-button-image-class"></img>
+          </button>
+          <label id="zoom-button" class="chart-radio-class" tabindex="-1">
+            <input type="radio" name="chart-buttons-group" id="chart-zoom-state" checked="checked">
+            <img src="./Images/zoom-in.png" class="chart-radio-image-class"></img>
+          </label>
+          <label id="drag-button" class="chart-radio-class" tabindex="-1">
+            <input type="radio" name="chart-buttons-group" id="chart-drag-state">
+            <img src="./Images/drag.png" class="chart-radio-image-class"></img>
+          </label>
+        </div>
+        <div class="path-chart-class" id="path-chart"></div>
       </div>
-      <div class="path-chart-class" id="path-chart" style="width:400px; height:300px;"></div>
-    </div>
 
-    <div class="table-space-class" id="table-space">
-      <div class="dots-count-table-container-class container" id="dots-count-table-container">
-        <table class="table table-sm table-info" style="margin: 0; border-radius: 0.8rem;">
-          <thead>
-            <tr>
-              <th colspan="3" style="border: none">Количество точек</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Всего</td>
-              <td><label id="all-dots-count-label">0</label></td>
-              <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" tabindex="-1" onclick="onOpenDotsCountDialog()">...</button></td>
-            </tr>
-            <tr>
-              <td>Хорошие</td>
-              <td><label id="good-dots-count-label">0</label></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Плохие</td>
-              <td><label id="bad-dots-count-label">0</label></td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="table-space-class" id="table-space">
+        <div class="dots-count-table-container-class" id="dots-count-table-container">
+          <table class="table table-sm table-info" style="margin: 0; border-radius: 0.8rem;">
+            <thead>
+              <tr>
+                <th colspan="3" style="border: none">Количество точек</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Всего</td>
+                <td><label id="all-dots-count-label">0</label></td>
+                <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" tabindex="-1" onclick="onOpenDotsCountDialog()">...</button></td>
+              </tr>
+              <tr>
+                <td>Хорошие</td>
+                <td><label id="good-dots-count-label">0</label></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Плохие</td>
+                <td><label id="bad-dots-count-label">0</label></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="path-table" style="width:300px"></div>
       </div>
-      <div id="path-table" style="width:300px"></div>
     </div>
 
 
