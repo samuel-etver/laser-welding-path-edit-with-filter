@@ -1,30 +1,37 @@
-const electron = require('electron')
-const ipc = electron.ipcRenderer
-const tabulator = require('tabulator-tables')
-const constants = require('./constants.js')
-const filters = require('./path_filter.js')
+const electron = require('electron');
+const ipc = electron.ipcRenderer;
+const tabulator = require('tabulator-tables');
+const constants = require('./constants.js');
+const filters = require('./path_filter.js');
 
-var readButton
-var writeButton
-var resetModificationButton
-var resetZoomButton
-var exitButton
-var yOffsetButton
-var zoomButton
-var dragButton
-var chartButtonsPanel
-var allDotsCountLabel
-var badDotsCountLabel
-var goodDotsCountLabel
-var pathChart
-var pathTable
-var originalWeldingPathData = []
-var modifiedWeldingPathData = []
-var dataSpaceSeparator
-var tableSpace
-var chartSpace
-var draggedDotIndex
-var yOffset = 0
+var readButton;
+var writeButton;
+var resetModificationButton;
+var resetZoomButton;
+var exitButton;
+var yOffsetButton;
+var zoomButton;
+var dragButton;
+var clearSelectionButton;
+var chartButtonsPanel;
+var allDotsCountLabel;
+var badDotsCountLabel;
+var goodDotsCountLabel;
+var pathChart;
+var pathTable;
+var originalWeldingPathData = [];
+var modifiedWeldingPathData = [];
+var dataSpaceSeparator;
+var tableSpace;
+var chartSpace;
+var draggedDotIndex;
+var yOffset = 0;
+var chartSelection = {
+  x0: null,
+  x1: null,
+  state: null
+};
+var ctrlKey;
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
@@ -71,6 +78,9 @@ window.onload = function() {
 
   dragButton = document.getElementById('drag-button');
   dragButton.addEventListener('click', onChartButtonClick);
+
+  clearSelectionButton = document.getElementById("clear-selection-button");
+  clearSelectionButton.addEventListener('click', onClearSelectionButtonClick);
 
   chartButtonsPanel = document.getElementById('chart-buttons-panel');
 
@@ -122,9 +132,6 @@ window.onload = function() {
           }
         }
       },
-      grid: {
-        shadow: false
-      },
       highlighter: {
         sizeAdjust: 10,
         tooltipLocation: 'n',
@@ -152,14 +159,70 @@ window.onload = function() {
               numberColumns: 2,
               seriesToggleReplot: true,
           }
+      },
+      canvasOverlay: {
+        show: true,
+        objects: [
+          {
+             rectangle: {
+               xmin: -1001,
+               xmax: -1000,
+               xminOffset: "0px",
+               xmaxOffset: "0px",
+               yminOffset: "0px",
+               ymaxOffset: "0px",
+               color: "rgba(0, 200, 200, 0.3)",
+               showTooltip: false
+             }
+          },
+          {
+            verticalLine: {
+              x: -1000,
+              yminOffset: '0px',
+              ymaxOffset: '0px',
+              lineWidth: 3,
+              color: 'rgba(0, 200, 200)',
+              shadow: false
+            }
+          }
+        ]
       }
     }
   );
+
   pathChart.series[0].plugins.draggable.constrainTo = 'y';
   pathChart.series[1].plugins.draggable = undefined;
 
   $('#path-chart').bind('jqplotDragStart', (ev, seriesIndex, pointIndex) => { draggedDotIndex = pointIndex; });
   $('#path-chart').bind('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
+  $('#path-chart').bind('jqplotClick', function(event, gridPos, dataPos) {
+    if(ctrlKey) {
+      let objects = pathChart.plugins.canvasOverlay.objects;
+      let rect = objects[0];
+      let line = objects[1];
+      let x = dataPos.xaxis;
+
+      switch(chartSelection.state) {
+        case null:
+        case 'rect':
+          rect.options.xmin = -1001;
+          rect.options.xmax = -1000;
+          line.options.x = x;
+          chartSelection.x0 = x;
+          chartSelection.x1 = x;
+          chartSelection.state = 'line';
+          break;
+        case 'line':
+          line.options.x = -1000;
+          chartSelection['x' + (x < chartSelection.x0 ? '0' : '1')] = x;
+          rect.options.xmin = chartSelection.x0;
+          rect.options.xmax = chartSelection.x1;
+          chartSelection.state = 'rect';
+      }
+
+      pathChart.replot();
+    }
+  });
 
   pathChart.mx = {
     options: {
@@ -251,6 +314,20 @@ function readPathFromSimatic() {
   });
 
   ipc.send('read-path', "");
+}
+
+
+window.onkeydown = function(event) {
+  if (event.keyCode == 17) {
+    ctrlKey = true;
+  }
+}
+
+
+window.onkeyup = function(event) {
+  if(event.keyCode == 17) {
+    ctrlKey = false;
+  }
 }
 
 
@@ -399,13 +476,6 @@ function filterPath(weldingData) {
 
 function onResizeWindow() {
   pathChart.replot();
-
-/* var chartButtonsPanelRect = chartButtonsPanel.getBoundingClientRect();
- var chartButtonsPanelLeft =
-   chartW - (chartButtonsPanelRect.right - chartButtonsPanelRect.left) - 40;
- chartButtonsPanel.style.left = chartButtonsPanelLeft + 'px';
-
-  pathTable.redraw(true);*/
 }
 
 
@@ -673,5 +743,22 @@ function prepareDialogs() {
         }
       });
     }
+  }
+}
+
+
+function onClearSelectionButtonClick() {
+  if (!chartSelection.state) {
+
+  }
+  else {
+    chartSelection.state = null;
+    let objects = pathChart.plugins.canvasOverlay.objects;
+    let rect = objects[0];
+    let line = objects[1];
+    rect.options.xmin = -1001;
+    rect.options.xmax = -1000;
+    line.options.x = -1000;
+    pathChart.replot();
   }
 }

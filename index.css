@@ -121,7 +121,7 @@ body {
   top: 24px;
   left: 2px;
   width: 32px;
-  height: 91px;
+  height: 122px;
 }
 
 .chart-button-class {
@@ -214,6 +214,10 @@ body {
 }
 
 #y-offset-button {
+  background-color: #aa77ff;
+}
+
+#clear-selection-button {
   background-color: #aa77ff;
 }
 

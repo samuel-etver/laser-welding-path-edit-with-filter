@@ -13,6 +13,7 @@
     <script src="./node_modules/jqplot/plugins/jqplot.highlighter.js"></script>
     <script src="./node_modules/jqplot/plugins/jqplot.draggable.js"></script>
     <script src="./node_modules/jqplot/plugins/jqplot.enhancedLegendRenderer.js"></script>
+    <script src="./node_modules/jqplot/plugins/jqplot.canvasOverlay.js"></script>
     <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <title>Редактор траектории лазерной сварки</title>
   </head>
@@ -40,6 +41,9 @@
             <input type="radio" name="chart-buttons-group" id="chart-drag-state">
             <img src="./Images/drag.png" class="chart-radio-image-class"></img>
           </label>
+          <button id="clear-selection-button" class="chart-button-class" tabindex="-1">
+              <img src="./Images/clear-selection.png" class="chart-button-image-class"></img>
+          </button>
         </div>
         <div class="path-chart-class" id="path-chart"></div>
       </div>
