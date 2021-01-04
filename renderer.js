@@ -96,7 +96,7 @@ window.onload = function() {
   chartSpace = document.getElementById('chart-space');
 
   $.jqplot.config.enablePlugins = true;
-  pathChart = $.jqplot('path-chart',  [ [,], [,] ],
+  pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
     {
       seriesDefaults: {
         shadow: false,
@@ -104,8 +104,14 @@ window.onload = function() {
       },
       series: [
         {
-          color: '#ffffff',
+          color: '#ff55cc',
           label: 'Исходная',
+          lineWidth: 1,
+          showMarker: false,
+        },
+        {
+          color: '#ffffff',
+          label: 'Модифицированная',
           showMarker: true,
           markerOptions: {
             shadow: false,
@@ -157,7 +163,7 @@ window.onload = function() {
           location: 'nw',
           renderer: $.jqplot.EnhancedLegendRenderer,
           rendererOptions: {
-              numberColumns: 2,
+              numberColumns: 3,
               seriesToggleReplot: true,
           }
       },
@@ -191,8 +197,9 @@ window.onload = function() {
     }
   );
 
-  pathChart.series[0].plugins.draggable.constrainTo = 'y';
-  pathChart.series[1].plugins.draggable = undefined;
+  pathChart.series[0].plugins.draggable = undefined;
+  pathChart.series[1].plugins.draggable.constrainTo = 'y';
+  pathChart.series[2].plugins.draggable = undefined;
 
   $('#path-chart').bind('jqplotDragStart', onDragStartPathChart);
   $('#path-chart').bind('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
@@ -227,7 +234,7 @@ window.onload = function() {
 
   pathChart.mx = {
     options: {
-      draggablePlugin: pathChart.series[0].plugins.draggable,
+      draggablePlugin: pathChart.series[1].plugins.draggable,
       zoomPlugin:      pathChart.plugins.cursor._zoom,
     }
   }
@@ -418,6 +425,7 @@ function resetModifiedPathData() {
 
 
 function refreshPathChart(weldingData, options) {
+  var originalData = [];
   var seriesData = [];
   var filteredData = [];
   var count = weldingData.length;
@@ -431,11 +439,23 @@ function refreshPathChart(weldingData, options) {
       seriesData.push( [x, item.y] );
     }
     if ( item.filteredY !== undefined ) {
-      filteredData. push( [x, item.filteredY] );
+      filteredData.push( [x, item.filteredY] );
     }
   }
-  pathChart.series[0].data = seriesData;
-  pathChart.series[1].data = filteredData;
+
+  count = originalWeldingPathData.length;
+  for(i = 0; i < count; i++) {
+    item = originalWeldingPathData[i];
+    x = kX*i;
+    if(item.status) {
+      originalData.push( [x, item.y]);
+    }
+  }
+
+
+  pathChart.series[0].data = originalData;
+  pathChart.series[1].data = seriesData;
+  pathChart.series[2].data = filteredData;
 
   new Promise(() => {
     var resetAxes = true;
@@ -499,12 +519,12 @@ function resetZoom() {
 
 function onDragStartPathChart(ev, seriesIndex, pointIndex) {
   draggedDotIndex = pointIndex;
-  dragStartY = pathChart.series[0].data[pointIndex][1];
+  dragStartY = pathChart.series[1].data[pointIndex][1];
 }
 
 
 function onDragStopPathChart(dotChartIndex) {
-  var dot = pathChart.series[0].data[dotChartIndex];
+  var dot = pathChart.series[1].data[dotChartIndex];
   var draggedX = dot[0];
   var draggedY = dot[1];
   var draggedDeltaY = draggedY - dragStartY;
@@ -697,7 +717,7 @@ function setChartState() {
   var zoomActivated = document.getElementById('chart-zoom-state').checked;
   var dragActivated = document.getElementById('chart-drag-state').checked;
 
-  pathChart.series[0].plugins.draggable = dragActivated
+  pathChart.series[1].plugins.draggable = dragActivated
    ? pathChart.mx.options.draggablePlugin
    : undefined;
   pathChart.plugins.cursor._zoom = zoomActivated
