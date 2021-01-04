@@ -32,6 +32,7 @@ var chartSelection = {
   state: null
 };
 var ctrlKey;
+var dragStartY;
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
@@ -193,7 +194,7 @@ window.onload = function() {
   pathChart.series[0].plugins.draggable.constrainTo = 'y';
   pathChart.series[1].plugins.draggable = undefined;
 
-  $('#path-chart').bind('jqplotDragStart', (ev, seriesIndex, pointIndex) => { draggedDotIndex = pointIndex; });
+  $('#path-chart').bind('jqplotDragStart', onDragStartPathChart);
   $('#path-chart').bind('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
   $('#path-chart').bind('jqplotClick', function(event, gridPos, dataPos) {
     if(ctrlKey) {
@@ -496,12 +497,46 @@ function resetZoom() {
 }
 
 
+function onDragStartPathChart(ev, seriesIndex, pointIndex) {
+  draggedDotIndex = pointIndex;
+  dragStartY = pathChart.series[0].data[pointIndex][1];
+}
+
+
 function onDragStopPathChart(dotChartIndex) {
   var dot = pathChart.series[0].data[dotChartIndex];
-  var kX = 1; // constants.kX
-  var dotTableIndex = Math.round(dot[0]/kX);
+  var draggedX = dot[0];
+  var draggedY = dot[1];
+  var draggedDeltaY = draggedY - dragStartY;
+  var draggedRegion = false;
   var tableData = pathTable.getData();
-  tableData[dotTableIndex].y = dot[1];
+  var kX = 1; // constants.kX
+  var dotTableIndex;
+
+  if(chartSelection.state == 'rect') {
+    draggedRegion = chartSelection.x0 <= draggedX &&
+                    chartSelection.x1 >= draggedX;
+  }
+
+  if (draggedRegion) {
+    var x = chartSelection.x0;
+    var x1 = chartSelection.x1;
+    dotTableIndex = Math.round(x/kX);
+    while(x < x1) {
+      if(tableData[dotTableIndex].valid) {
+        tableData[dotTableIndex].y += draggedDeltaY;
+      }
+      if(++dotTableIndex >= tableData.length) {
+        break;
+      }
+      x = dotTableIndex;
+    }
+  }
+  else {
+    dotTableIndex = Math.round(draggedX/kX);
+    tableData[dotTableIndex].y = draggedY;
+  }
+
   new Promise(() => {
     pathTable.replaceData(tableData);
     readModifiedWeldingPathData();
@@ -749,7 +784,7 @@ function prepareDialogs() {
 
 function onClearSelectionButtonClick() {
   if (!chartSelection.state) {
-
+    $('#chart-selection-info-modal-dialog').modal('show');
   }
   else {
     chartSelection.state = null;
