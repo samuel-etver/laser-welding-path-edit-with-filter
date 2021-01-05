@@ -251,8 +251,31 @@ window.onload = function() {
   var columnXWidth = 59;
   var columnYWidth = columnXWidth;
 
+
   pathTable = new tabulator("#path-table", {
     autoResize: true,
+    rowContextMenu: [
+      {
+        label: "Установить статус",
+        action: onSetStatusClick
+      },
+      {
+        label: "Установить всем",
+        action: onSetStatusForAllClick
+      },
+      {
+        label: "Снять статус",
+        action: onClearStatusClick
+      },
+      {
+        label: "Снять выделение",
+        action: onClearRowsSelectionClick
+      }
+    ],
+    selectable: true,
+    rowClick: function(e, row) {
+      row.deselect();
+    },
     columns:[
       {
         title: "ИНД",
@@ -605,7 +628,6 @@ function onPathTableDataEdited(data) {
   });
 }
 
-
 function resizeWeldingData(newSize) {
   if ( newSize < modifiedWeldingPathData.length ) {
     while ( newSize < modifiedWeldingPathData.length ) {
@@ -642,6 +664,7 @@ function refreshDotsCountLabels(data) {
   var badDots = data.length - goodDots;
   badDotsCountLabel.textContent = badDots;
 }
+
 
 
 function onOpenOptionsDialog() {
@@ -816,4 +839,54 @@ function onClearSelectionButtonClick() {
     line.options.x = -1000;
     pathChart.replot();
   }
+}
+
+
+function onSetStatusClick() {
+  refreshAll(function() {
+    let allRows = pathTable.getSelectedRows();
+    for(let row of allRows) {
+      var index = row.getPosition();
+      modifiedWeldingPathData[index].status = 1;
+    }
+  });
+}
+
+
+function onSetStatusForAllClick() {
+  refreshAll(function() {
+    for(let item of modifiedWeldingPathData) {
+      item.status = 1;
+    }
+  });
+}
+
+
+function onClearStatusClick() {
+  refreshAll(function() {
+    let allRows = pathTable.getSelectedRows();
+    for(let row of allRows) {
+      var index = row.getPosition();
+      modifiedWeldingPathData[index].status = 0;
+    }
+  });
+}
+
+
+function onClearRowsSelectionClick() {
+  pathTable.deselectRow();
+}
+
+
+function refreshAll(cb) {
+  new Promise(() => {
+    readModifiedWeldingPathData();
+    if (cb) {
+      cb();
+    }
+    filterPath(modifiedWeldingPathData);
+    refreshPathChart(modifiedWeldingPathData);
+    refreshWeldingPathTable(modifiedWeldingPathData);
+    refreshDotsCountLabels(modifiedWeldingPathData);
+  });
 }

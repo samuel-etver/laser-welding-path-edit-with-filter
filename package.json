@@ -14,19 +14,19 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "chai": "^4.2.0",
-    "electron": "^7.1.10",
+    "electron": "^7.3.3",
     "electron-packager": "^14.2.0",
-    "mocha": "^7.0.1"
+    "mocha": "^7.2.0"
   },
   "dependencies": {
-    "bootstrap": "^4.4.1",
-    "csv-parser": "^2.3.2",
+    "bootstrap": "^4.5.3",
+    "csv-parser": "^2.3.5",
     "csv-writer": "^1.6.0",
     "jqplot": "^1.0.9",
-    "jquery": "^3.4.1",
-    "nodes7": "^0.3.10",
+    "jquery": "^3.5.1",
+    "nodes7": "^0.3.12",
     "popper": "^1.0.1",
-    "tabulator-tables": "^4.5.3",
+    "tabulator-tables": "^4.9.3",
     "xmldom": "^0.2.1"
   }
 }
