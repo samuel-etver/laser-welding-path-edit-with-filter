@@ -80,7 +80,7 @@
     </div>
 
 
-    <!-- dots counts modal dialog -->
+    <!-- dots counts dialog -->
     <div class="modal" id="dots-count-modal-dialog">
       <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -104,7 +104,7 @@
     </div>
 
 
-    <!-- options modal dialog -->
+    <!-- options dialog -->
     <div class="modal" id="options-modal-dialog">
       <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -173,7 +173,7 @@
     </div>
 
 
-    <!-- error modal dialog -->
+    <!-- error dialog -->
     <div class="modal" id="error-modal-dialog">
       <div class="modal-dialog  modal-sm modal-dialog-centered">
       <div class="modal-content">
@@ -196,7 +196,7 @@
     </div>
 
 
-    <!-- write confirmation modal dialog -->
+    <!-- write confirmation dialog -->
     <div class="modal" id="write-confirmation-modal-dialog">
       <div class="modal-dialog  modal modal-dialog-centered">
         <div class="modal-content">
@@ -255,7 +255,7 @@
     </div>
 
 
-    <!-- write success modal dialog -->
+    <!-- write success dialog -->
     <div class="modal" id="write-success-modal-dialog">
       <div class="modal-dialog  modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -303,7 +303,7 @@
     </div>
 
 
-    <!-- y-offset modal dialog -->
+    <!-- y-offset dialog -->
     <div class="modal" id="y-offset-modal-dialog">
       <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -321,7 +321,7 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary focusable default-control" onclick="onYOffserDialogOkClick();">Ввод</button>
+            <button type="button" class="btn btn-primary focusable default-control" onclick="onYOffsetDialogOkClick();">Ввод</button>
             <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
@@ -330,7 +330,7 @@
     </div>
 
 
-    <!-- write success modal dialog -->
+    <!-- chart selection info dialog -->
     <div class="modal" id="chart-selection-info-modal-dialog">
       <div class="modal-dialog  modal-sm modal-dialog-centered" >
         <div class="modal-content">
@@ -347,6 +347,48 @@
 
           <div class="modal-footer">
             <button type="button" class="btn btn-primary first-focus focusable default-control" data-dismiss="modal">Закрыть</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- set/clear status in range dialog -->
+    <div class="modal" id="set-clear-status-in-range-modal-dialog">
+      <div class="modal-dialog  modal-sm modal-dialog-centered" >
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h4 class="modal-title" id="set-clear-status-in-range-title" style="margin: auto 0" >Установить статус</h4>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="form-group" style="margin-top:30;">
+              <label for="block-number-input">С</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">Индекс</span>
+                </div>
+                <input class="form-control focusable first-focus" id="set-clear-status-in-range-from-input">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:30;">
+              <label for="block-number-input">По</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">Индекс</span>
+                </div>
+                <input class="form-control focusable" id="set-clear-status-in-range-to-input">
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary focusable default-control" id="set-clear-status-in-range-ok-button">Ввод</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
         </div>

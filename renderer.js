@@ -33,6 +33,10 @@ var chartSelection = {
 };
 var ctrlKey;
 var dragStartY;
+var tableSelection = {
+  fromIndex: null,
+  toIndex: null
+};
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
@@ -260,12 +264,26 @@ window.onload = function() {
         action: onSetStatusClick
       },
       {
+        label: "Установить в диапазоне...",
+        action: onSetStatusInRangeClick
+      },
+      {
         label: "Установить всем",
         action: onSetStatusForAllClick
       },
       {
-        label: "Снять статус",
+        separator: true
+      },
+      {
+        label: "Сбросить статус",
         action: onClearStatusClick
+      },
+      {
+        label: "Сбросить в диапазоне...",
+        action: onClearStatusInRangeClick
+      },
+      {
+        separator: true
       },
       {
         label: "Снять выделение",
@@ -756,7 +774,7 @@ function onOpenYOffsetDialog() {
 }
 
 
-function onYOffserDialogOkClick() {
+function onYOffsetDialogOkClick() {
   var input = document.getElementById('y-offset-modal-input');
   yOffset = input.value;
   $('#y-offset-modal-dialog').modal('hide');
@@ -889,4 +907,60 @@ function refreshAll(cb) {
     refreshWeldingPathTable(modifiedWeldingPathData);
     refreshDotsCountLabels(modifiedWeldingPathData);
   });
+}
+
+
+function onSetStatusInRangeClick(status) {
+  if (status === undefined) {
+    status = true;
+  }
+
+  var titleEl = document.getElementById("set-clear-status-in-range-title");
+  titleEl.innerHTML = status
+    ? "Установить статус"
+    : "Сбросить статус";
+
+  var okButton = document.getElementById("set-clear-status-in-range-ok-button");
+  okButton.onclick = () => onSetStatusInRangeDialogOkClick(status);
+
+  var fromInput = document.getElementById("set-clear-status-in-range-from-input");
+  fromInput.value = tableSelection.fromIndex;
+
+  var toInput = document.getElementById("set-clear-status-in-range-to-input");
+  toInput.value = tableSelection.toIndex;
+
+  $('#set-clear-status-in-range-modal-dialog').modal('show');
+}
+
+
+function onClearStatusInRangeClick() {
+  onSetStatusInRangeClick(false);
+}
+
+
+function onSetStatusInRangeDialogOkClick(status) {
+  $('#set-clear-status-in-range-modal-dialog').modal('hide');
+
+  var fromInput = document.getElementById("set-clear-status-in-range-from-input");
+  tableSelection.fromIndex = fromInput.value;
+
+  var toInput = document.getElementById("set-clear-status-in-range-to-input");
+  tableSelection.toIndex = toInput.value;
+
+  var fromIndex = parseInt(tableSelection.fromIndex);
+  var toIndex = parseInt(tableSelection.toIndex);
+
+  if (!isNaN(fromIndex) && !isNaN(toIndex)) {
+    if (fromIndex < 0) {
+      fromIndex = 0;
+    }
+    refreshAll(function() {
+      if (toIndex >= modifiedWeldingPathData.length) {
+        toIndex = modifiedWeldingPathData.length - 1;
+      }
+      for(let i = fromIndex; i <= toIndex; i++) {
+        modifiedWeldingPathData[i].status = status;
+      }
+    });
+  }
 }
