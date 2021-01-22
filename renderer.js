@@ -102,6 +102,7 @@ window.onload = function() {
   $.jqplot.config.enablePlugins = true;
   pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
     {
+      captureRightClick : true,
       seriesDefaults: {
         shadow: false,
         lineWidth: 1,
@@ -205,36 +206,10 @@ window.onload = function() {
   pathChart.series[1].plugins.draggable.constrainTo = 'y';
   pathChart.series[2].plugins.draggable = undefined;
 
-  $('#path-chart').bind('jqplotDragStart', onDragStartPathChart);
-  $('#path-chart').bind('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
-  $('#path-chart').bind('jqplotClick', function(event, gridPos, dataPos) {
-    if(ctrlKey) {
-      let objects = pathChart.plugins.canvasOverlay.objects;
-      let rect = objects[0];
-      let line = objects[1];
-      let x = dataPos.xaxis;
-
-      switch(chartSelection.state) {
-        case null:
-        case 'rect':
-          rect.options.xmin = -1001;
-          rect.options.xmax = -1000;
-          line.options.x = x;
-          chartSelection.x0 = x;
-          chartSelection.x1 = x;
-          chartSelection.state = 'line';
-          break;
-        case 'line':
-          line.options.x = -1000;
-          chartSelection['x' + (x < chartSelection.x0 ? '0' : '1')] = x;
-          rect.options.xmin = chartSelection.x0;
-          rect.options.xmax = chartSelection.x1;
-          chartSelection.state = 'rect';
-      }
-
-      pathChart.replot();
-    }
-  });
+  $('#path-chart').on('jqplotDragStart', onDragStartPathChart);
+  $('#path-chart').on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
+  $('#path-chart').on('jqplotClick', onChartClick);
+  $('#path-chart').on('jqplotRightClick', onChartContextMenu);
 
   pathChart.mx = {
     options: {
@@ -963,4 +938,55 @@ function onSetStatusInRangeDialogOkClick(status) {
       }
     });
   }
+}
+
+
+function onChartClick(event, gridPos, dataPos) {
+  if(ctrlKey) {
+    let objects = pathChart.plugins.canvasOverlay.objects;
+    let rect = objects[0];
+    let line = objects[1];
+    let x = dataPos.xaxis;
+
+    switch(chartSelection.state) {
+      case null:
+      case 'rect':
+        rect.options.xmin = -1001;
+        rect.options.xmax = -1000;
+        line.options.x = x;
+        chartSelection.x0 = x;
+        chartSelection.x1 = x;
+        chartSelection.state = 'line';
+        break;
+      case 'line':
+        line.options.x = -1000;
+        chartSelection['x' + (x < chartSelection.x0 ? '0' : '1')] = x;
+        rect.options.xmin = chartSelection.x0;
+        rect.options.xmax = chartSelection.x1;
+        chartSelection.state = 'rect';
+    }
+
+    pathChart.replot();
+  }
+}
+
+
+function onChartContextMenu(event) {
+  var top = event.pageY - 10;
+  var left = event.pageX - 10;
+
+  $("#chart-context-menu").css({
+    display: "block",
+    top: top,
+    left: left
+  }).addClass("show");
+
+  $('body').one("click", function() {
+    $("#chart-context-menu").removeClass("show").hide();
+  });
+}
+
+
+function onChartSelectionYMoveClick() {
+  $('#chart-selection-y-move-modal-dialog').modal('show');
 }

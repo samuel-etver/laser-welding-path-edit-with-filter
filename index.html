@@ -18,6 +18,9 @@
     <title>Редактор траектории лазерной сварки</title>
   </head>
   <body>
+    <div class="dropdown-menu dropdown-menu-sm" id="chart-context-menu">
+      <a class="dropdown-item" href="#" onclick="onChartSelectionYMoveClick();">Сместить группу по оси Y ...</a>
+    </div>
 
     <div style="margin-top:8px; margin-bottom: 8px; white-space:nowrap;">
       <button class="btn btn-primary" id="read-button" tabindex="-1">Считать</button>
@@ -388,6 +391,33 @@
 
           <div class="modal-footer">
             <button type="button" class="btn btn-primary focusable default-control" id="set-clear-status-in-range-ok-button">Ввод</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- chart selection y move dialog -->
+    <div class="modal" id="chart-selection-y-move-modal-dialog">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h6 class="modal-title">Сместить группу по оси Y</h4>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="d-flex flex-row align-items-center">
+              <input type="text" id="chart-selection-y-move-modal-input" class="form-control first-focus focusable">
+              <span style="margin-left: 16px">мм</span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary focusable default-control" onclick="onYOffsetDialogOkClick();">Ввод</button>
             <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
           </div>
 
