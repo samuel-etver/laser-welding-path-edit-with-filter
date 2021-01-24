@@ -29,7 +29,8 @@ var yOffset = 0;
 var chartSelection = {
   x0: null,
   x1: null,
-  state: null
+  state: null,
+  yMove: 0
 };
 var ctrlKey;
 var dragStartY;
@@ -988,5 +989,47 @@ function onChartContextMenu(event) {
 
 
 function onChartSelectionYMoveClick() {
+  var yMoveEl = document.getElementById('chart-selection-y-move-modal-input');
+  yMoveEl.value = chartSelection.yMove;
+
   $('#chart-selection-y-move-modal-dialog').modal('show');
+}
+
+
+function onChartSelectionYMoveDialogOkClick() {
+  $('#chart-selection-y-move-modal-dialog').modal('hide');
+
+  var yMoveEl = document.getElementById('chart-selection-y-move-modal-input');
+  chartSelection.yMove = yMoveEl.value;
+
+  var yMove = parseFloat(chartSelection.yMove);
+  if (isNaN(yMove) ||
+      chartSelection.state != 'rect') {
+    return;
+  }
+
+  var x = chartSelection.x0;
+  var x1 = chartSelection.x1;
+  var tableData = pathTable.getData();
+  var kX = 1; // constants.kX
+  var dotTableIndex = Math.round(x/kX);
+  while(x < x1) {
+    if(tableData[dotTableIndex].valid) {
+      tableData[dotTableIndex].y += yMove;
+    }
+    if(++dotTableIndex >= tableData.length) {
+      break;
+    }
+    x = dotTableIndex;
+  }
+
+  new Promise(() => {
+    pathTable.replaceData(tableData);
+    readModifiedWeldingPathData();
+    filterPath(modifiedWeldingPathData);
+    refreshWeldingPathTable(modifiedWeldingPathData);
+    refreshPathChart(modifiedWeldingPathData, {
+      resetAxes: false,
+    });
+  });
 }
