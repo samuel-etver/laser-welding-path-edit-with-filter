@@ -29,6 +29,8 @@ var yOffset = 0;
 var chartSelection = {
   x0: null,
   x1: null,
+  index0: null,
+  index1: null,
   state: null,
   yMove: 0
 };
@@ -1032,4 +1034,54 @@ function onChartSelectionYMoveDialogOkClick() {
       resetAxes: false,
     });
   });
+}
+
+
+function onChartRangeSelectionClick() {
+  var fromEl = document.getElementById('chart-range-selection-from-input');
+  fromEl.value = chartSelection.index0;
+
+  var toEl = document.getElementById('chart-range-selection-to-input');
+  toEl.value = chartSelection.index1;
+
+  $('#chart-range-selection-modal-dialog').modal('show');
+}
+
+
+function onChartRangeSelectionDialogOkClick() {
+  $('#chart-range-selection-modal-dialog').modal('hide');
+
+  var fromEl = document.getElementById('chart-range-selection-from-input');
+  chartSelection.index0 = fromEl.value;
+
+  var toEl = document.getElementById('chart-range-selection-to-input');
+  chartSelection.index1 = toEl.value;
+
+  var index0 = parseFloat(chartSelection.index0);
+  var index1 = parseFloat(chartSelection.index1);
+
+  var correctSelection = !isNaN(index0) && !isNaN(index1) && index0 < index1;
+
+  var kX = 1.0;
+
+  var objects = pathChart.plugins.canvasOverlay.objects;
+  var rect = objects[0];
+  var line = objects[1];
+
+  line.options.x = -1000;
+
+  if (correctSelection) {
+    chartSelection.state = 'rect';
+    chartSelection.x0 = kX * index0;
+    chartSelection.x1 = kX * index1;
+    rect.options.xmin = chartSelection.x0;
+    rect.options.xmax = chartSelection.x1;
+  }
+  else {
+    chartSelection.state = null;
+    rect.options.xmin = -1001;
+    rect.options.xmax = -1000;
+  }
+
+  pathChart.replot();
 }
