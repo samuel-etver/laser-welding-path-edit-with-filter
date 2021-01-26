@@ -789,20 +789,38 @@ function prepareDialogs() {
 
         if (event.which == 9) {
           event.preventDefault();
-          let index = elementsList.findIndex(el => el == focusEl);
-          if (index >= 0) {
-            if (event.shiftKey) {
-              if (--index < 0) {
-                index = elementsList.length - 1;
+          let oldIndex = elementsList.findIndex(el => el == focusEl);
+          let index = oldIndex;
+
+          let getNext = function(index) {
+            if (index >= 0) {
+              if (event.shiftKey) {
+                if (--index < 0) {
+                  index = elementsList.length - 1;
+                }
+              }
+              else {
+                if (++index >= elementsList.length) {
+                  index = 0;
+                }
               }
             }
-            else {
-              if (++index >= elementsList.length) {
-                index = 0;
-              }
-            }
-            elementsList[index].focus();
+            return index < 0 ? 0 : index;
           }
+
+          do {
+            index = getNext(index);
+            var nextEl = elementsList[index];
+            let style = getComputedStyle(nextEl);
+            if (style.visibility != 'hidden' &&
+                style.opacity &&
+                nextEl.clientWidth &&
+                nextEl.clientHeight) {
+              break;
+            }
+          } while(index != oldIndex);
+
+          nextEl.focus();
         }
 
         if (event.which == 13 && defaultEl) {
@@ -1016,7 +1034,10 @@ function onChartSelectionYMoveDialogOkClick() {
   var kX = 1; // constants.kX
   var dotTableIndex = Math.round(x/kX);
   while(x < x1) {
-    if(tableData[dotTableIndex].valid) {
+    var item = originalWeldingPathData[dotTableIndex];
+    tableData[dotTableIndex].valid = item.status != 0;
+    tableData[dotTableIndex].y = item.y;
+    if (tableData[dotTableIndex].valid) {
       tableData[dotTableIndex].y += yMove;
     }
     if(++dotTableIndex >= tableData.length) {
