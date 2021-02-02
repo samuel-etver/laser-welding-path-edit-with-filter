@@ -6,9 +6,6 @@ const filters = require('./path_filter.js');
 
 var readButton;
 var writeButton;
-var resetModificationButton;
-var resetZoomButton;
-var exitButton;
 var yOffsetButton;
 var zoomButton;
 var dragButton;
@@ -17,33 +14,32 @@ var chartButtonsPanel;
 var allDotsCountLabel;
 var badDotsCountLabel;
 var goodDotsCountLabel;
-var pathChart;
-var pathTable;
-var originalWeldingPathData = [];
-var modifiedWeldingPathData = [];
-var dataSpaceSeparator;
-var tableSpace;
-var chartSpace;
-var draggedDotIndex;
-var yOffset = 0;
-var chartSelection = {
-  x0: null,
-  x1: null,
-  index0: null,
-  index1: null,
-  state: null,
-  yMove: 0
+var yScan = {
+  originalWeldingPathData: [],
+  modifiedWeldingPathData: [],
+  yOffset: 0,
+  pathChart: undefined,
+  pathTable: undefined,
+  chartSelection: {
+    x0: null,
+    x1: null,
+    index0: null,
+    index1: null,
+    state: null,
+    yMove: 0
+  },
+  tableSelection: {
+    fromIndex: null,
+    toIndex: null
+  }
 };
+var draggedDotIndex;
 var ctrlKey;
 var dragStartY;
-var tableSelection = {
-  fromIndex: null,
-  toIndex: null
-};
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
-    originalWeldingPathData = arg;
+    yScan.originalWeldingPathData = arg;
     filterPath(arg);
     refreshWeldingPathTable(arg);
     refreshPathChart(arg);
@@ -52,7 +48,7 @@ window.onload = function() {
 
   ipc.on('get-path-data', () => {
     readModifiedWeldingPathData();
-    ipc.send('get-path-data-reply', modifiedWeldingPathData);
+    ipc.send('get-path-data-reply', yScan.modifiedWeldingPathData);
   });
   ipc.on('open-options-dialog', () => onOpenOptionsDialog());
   ipc.on('open-error-dialog', (event, arg) => onOpenErrorDialog(arg));
@@ -67,7 +63,7 @@ window.onload = function() {
   writeButton = document.getElementById('write-button');
   writeButton.addEventListener('click', onWriteButtonClick);
 
-  resetModificationButton = document.getElementById('reset-modification-button');
+  var resetModificationButton = document.getElementById('reset-modification-button');
   resetModificationButton.addEventListener('click', () => {
     openConfirmationDialog(
       'Все изменения будут потеряны. Продолжить?',
@@ -75,10 +71,10 @@ window.onload = function() {
     );
   });
 
-  resetZoomButton = document.getElementById('reset-zoom-button');
+  var resetZoomButton = document.getElementById('reset-zoom-button');
   resetZoomButton.addEventListener('click', resetZoom);
 
-  exitButton = document.getElementById('exit-button');
+  var exitButton = document.getElementById('exit-button');
   exitButton.addEventListener('click', () => window.close());
 
   zoomButton = document.getElementById('zoom-button');
@@ -96,14 +92,8 @@ window.onload = function() {
   badDotsCountLabel = document.getElementById('bad-dots-count-label');
   goodDotsCountLabel = document.getElementById('good-dots-count-label');
 
-  dataSpaceSeparator = document.getElementById('data-space-separator');
-
-  tableSpace = document.getElementById('table-space');
-
-  chartSpace = document.getElementById('chart-space');
-
   $.jqplot.config.enablePlugins = true;
-  pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
+  yScan.pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
     {
       captureRightClick : true,
       seriesDefaults: {
@@ -205,19 +195,19 @@ window.onload = function() {
     }
   );
 
-  pathChart.series[0].plugins.draggable = undefined;
-  pathChart.series[1].plugins.draggable.constrainTo = 'y';
-  pathChart.series[2].plugins.draggable = undefined;
+  yScan.pathChart.series[0].plugins.draggable = undefined;
+  yScan.pathChart.series[1].plugins.draggable.constrainTo = 'y';
+  yScan.pathChart.series[2].plugins.draggable = undefined;
 
   $('#path-chart').on('jqplotDragStart', onDragStartPathChart);
   $('#path-chart').on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
   $('#path-chart').on('jqplotClick', onChartClick);
   $('#path-chart').on('jqplotRightClick', onChartContextMenu);
 
-  pathChart.mx = {
+  yScan.pathChart.mx = {
     options: {
-      draggablePlugin: pathChart.series[1].plugins.draggable,
-      zoomPlugin:      pathChart.plugins.cursor._zoom,
+      draggablePlugin: yScan.pathChart.series[1].plugins.draggable,
+      zoomPlugin:      yScan.pathChart.plugins.cursor._zoom,
     }
   }
 
@@ -234,7 +224,7 @@ window.onload = function() {
   var columnYWidth = columnXWidth;
 
 
-  pathTable = new tabulator("#path-table", {
+  yScan.pathTable = new tabulator("#path-table", {
     autoResize: true,
     rowContextMenu: [
       {
@@ -333,11 +323,11 @@ window.onload = function() {
 
 function readPathFromSimatic() {
   ipc.on('read-path-reply', (event, arg) => {
-    originalWeldingPathData = arg;
-    filterPath(originalWeldingPathData);
-    refreshWeldingPathTable(originalWeldingPathData);
-    refreshPathChart(originalWeldingPathData);
-    refreshDotsCountLabels(originalWeldingPathData);
+    yScan.originalWeldingPathData = arg;
+    filterPath(arg);
+    refreshWeldingPathTable(arg);
+    refreshPathChart(arg);
+    refreshDotsCountLabels(arg);
   });
 
   ipc.send('read-path', "");
@@ -392,8 +382,8 @@ function writePathToSimatic() {
     writePathType: (el.value == '1' ? 'before' : 'after'),
   });
   readModifiedWeldingPathData();
-  filterPath(modifiedWeldingPathData);
-  ipc.send('write-path', modifiedWeldingPathData);
+  filterPath(yScan.modifiedWeldingPathData);
+  ipc.send('write-path', yScan.modifiedWeldingPathData);
 }
 
 
@@ -412,15 +402,15 @@ function refreshWeldingPathTable(pathData) {
     });
     index++;
   }
-  pathTable.replaceData(tableData);
+  yScan.pathTable.replaceData(tableData);
 }
 
 
 function readModifiedWeldingPathData() {
-  var data = pathTable.getData()
-  modifiedWeldingPathData = [];
+  var data = yScan.pathTable.getData()
+  yScan.modifiedWeldingPathData = [];
   for (item of data) {
-    modifiedWeldingPathData.push({
+    yScan.modifiedWeldingPathData.push({
       y: item.y,
       status: (item.valid ? 1 : 0)
     });
@@ -429,16 +419,16 @@ function readModifiedWeldingPathData() {
 
 
 function resetModifiedPathData() {
-  yOffset = 0;
+  yScan.yOffset = 0;
   var newModified = [];
-  for (var item of originalWeldingPathData) {
+  for (var item of yScan.originalWeldingPathData) {
     newModified.push( [].concat(item) );
   }
-  modifiedWeldingPathData = originalWeldingPathData;
+  yScan.modifiedWeldingPathData = yScan.originalWeldingPathData;
   new Promise(() => {
-    refreshPathChart(originalWeldingPathData);
-    refreshWeldingPathTable(originalWeldingPathData);
-    refreshDotsCountLabels(originalWeldingPathData);
+    refreshPathChart(yScan.originalWeldingPathData);
+    refreshWeldingPathTable(yScan.originalWeldingPathData);
+    refreshDotsCountLabels(yScan.originalWeldingPathData);
   });
 }
 
@@ -462,9 +452,9 @@ function refreshPathChart(weldingData, options) {
     }
   }
 
-  count = originalWeldingPathData.length;
+  count = yScan.originalWeldingPathData.length;
   for(i = 0; i < count; i++) {
-    item = originalWeldingPathData[i];
+    item = yScan.originalWeldingPathData[i];
     x = kX*i;
     if(item.status) {
       originalData.push( [x, item.y]);
@@ -472,16 +462,16 @@ function refreshPathChart(weldingData, options) {
   }
 
 
-  pathChart.series[0].data = originalData;
-  pathChart.series[1].data = seriesData;
-  pathChart.series[2].data = filteredData;
+  yScan.pathChart.series[0].data = originalData;
+  yScan.pathChart.series[1].data = seriesData;
+  yScan.pathChart.series[2].data = filteredData;
 
   new Promise(() => {
     var resetAxes = true;
     if ( options && options.resetAxes !== undefined) {
       resetAxes = options.resetAxes;
     }
-    pathChart.replot( {resetAxes: resetAxes}  );
+    yScan.pathChart.replot( {resetAxes: resetAxes}  );
   });
 }
 
@@ -505,7 +495,7 @@ function filterPath(weldingData) {
 
 
   var n = arrIn.length;
-  var offset = parseFloat(yOffset);
+  var offset = parseFloat(yScan.yOffset);
   if ( isNaN(offset) ) {
     offset = 0;
   }
@@ -515,51 +505,51 @@ function filterPath(weldingData) {
 }
 
 function onResizeWindow() {
-  pathChart.replot();
+  yScan.pathChart.replot();
 }
 
 
 function resetZoom() {
   var activateZoom = false;
-  if ( !pathChart.plugins.cursor._zoom ) {
-    pathChart.plugins.cursor._zoom = pathChart.mx.options.zoomPlugin;
+  if ( !yScan.pathChart.plugins.cursor._zoom ) {
+    yScan.pathChart.plugins.cursor._zoom = yScan.pathChart.mx.options.zoomPlugin;
     activateZoom = true;
   }
 
-  pathChart.resetZoom();
+  yScan.pathChart.resetZoom();
 
   if ( activateZoom ) {
-    pathChart.plugins.cursor._zoom = undefined;
+    yScan.pathChart.plugins.cursor._zoom = undefined;
   }
 
-  pathChart.replot ( { resetAxes: true} );
+  yScan.pathChart.replot ( { resetAxes: true} );
 }
 
 
 function onDragStartPathChart(ev, seriesIndex, pointIndex) {
   draggedDotIndex = pointIndex;
-  dragStartY = pathChart.series[1].data[pointIndex][1];
+  dragStartY = yScan.pathChart.series[1].data[pointIndex][1];
 }
 
 
 function onDragStopPathChart(dotChartIndex) {
-  var dot = pathChart.series[1].data[dotChartIndex];
+  var dot = yScan.pathChart.series[1].data[dotChartIndex];
   var draggedX = dot[0];
   var draggedY = dot[1];
   var draggedDeltaY = draggedY - dragStartY;
   var draggedRegion = false;
-  var tableData = pathTable.getData();
+  var tableData = yScan.pathTable.getData();
   var kX = 1; // constants.kX
   var dotTableIndex;
 
-  if(chartSelection.state == 'rect') {
-    draggedRegion = chartSelection.x0 <= draggedX &&
-                    chartSelection.x1 >= draggedX;
+  if(yScan.chartSelection.state == 'rect') {
+    draggedRegion = yScan.chartSelection.x0 <= draggedX &&
+                    yScan.chartSelection.x1 >= draggedX;
   }
 
   if (draggedRegion) {
-    var x = chartSelection.x0;
-    var x1 = chartSelection.x1;
+    var x = yScan.chartSelection.x0;
+    var x1 = yScan.chartSelection.x1;
     dotTableIndex = Math.round(x/kX);
     while(x < x1) {
       if(tableData[dotTableIndex].valid) {
@@ -577,11 +567,11 @@ function onDragStopPathChart(dotChartIndex) {
   }
 
   new Promise(() => {
-    pathTable.replaceData(tableData);
+    yScan.pathTable.replaceData(tableData);
     readModifiedWeldingPathData();
-    filterPath(modifiedWeldingPathData);
-    refreshWeldingPathTable(modifiedWeldingPathData);
-    refreshPathChart(modifiedWeldingPathData, {
+    filterPath(yScan.modifiedWeldingPathData);
+    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
+    refreshPathChart(yScan.modifiedWeldingPathData, {
       resetAxes: false,
     });
   });
@@ -591,7 +581,7 @@ function onDragStopPathChart(dotChartIndex) {
 function onOpenDotsCountDialog() {
   var input = document.getElementById('dots-count-modal-input');
   readModifiedWeldingPathData();
-  input.value = modifiedWeldingPathData.length;
+  input.value = yScan.modifiedWeldingPathData.length;
   $('#dots-count-modal-dialog').modal('show');
 }
 
@@ -603,7 +593,7 @@ function onDotsCountDialogOkClick() {
     if ( newSize > constants.dotsCountMax ) {
       newSize = constants.dotsCountMax;
     }
-    if ( newSize != modifiedWeldingPathData.length ) {
+    if ( newSize != yScan.modifiedWeldingPathData.length ) {
       allDotsCountLabel.textContent = newSize;
       new Promise(() => {
         resizeWeldingData(newSize);
@@ -617,32 +607,32 @@ function onDotsCountDialogOkClick() {
 function onPathTableDataEdited(data) {
   new Promise(() => {
     readModifiedWeldingPathData();
-    filterPath(modifiedWeldingPathData);
-    refreshPathChart(modifiedWeldingPathData, { resetAxes: false });
-    refreshWeldingPathTable(modifiedWeldingPathData);
-    refreshDotsCountLabels(modifiedWeldingPathData);
+    filterPath(yScan.modifiedWeldingPathData);
+    refreshPathChart(yScan.modifiedWeldingPathData, { resetAxes: false });
+    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
+    refreshDotsCountLabels(yScan.modifiedWeldingPathData);
   });
 }
 
 function resizeWeldingData(newSize) {
-  if ( newSize < modifiedWeldingPathData.length ) {
-    while ( newSize < modifiedWeldingPathData.length ) {
-      modifiedWeldingPathData.pop();
+  if ( newSize < yScan.modifiedWeldingPathData.length ) {
+    while ( newSize < yScan.modifiedWeldingPathData.length ) {
+      yScan.modifiedWeldingPathData.pop();
     }
   }
   else {
-    while ( modifiedWeldingPathData.length < newSize ) {
-      modifiedWeldingPathData.push({
+    while ( yScan.modifiedWeldingPathData.length < newSize ) {
+      yScan.modifiedWeldingPathData.push({
         y: 0.0,
         status: 1
       });
     }
   }
 
-  filterPath(modifiedWeldingPathData);
-  refreshWeldingPathTable(modifiedWeldingPathData);
-  refreshPathChart(modifiedWeldingPathData);
-  refreshDotsCountLabels(modifiedWeldingPathData);
+  filterPath(yScan.modifiedWeldingPathData);
+  refreshWeldingPathTable(yScan.modifiedWeldingPathData);
+  refreshPathChart(yScan.modifiedWeldingPathData);
+  refreshDotsCountLabels(yScan.modifiedWeldingPathData);
 }
 
 
@@ -736,31 +726,31 @@ function setChartState() {
   var zoomActivated = document.getElementById('chart-zoom-state').checked;
   var dragActivated = document.getElementById('chart-drag-state').checked;
 
-  pathChart.series[1].plugins.draggable = dragActivated
-   ? pathChart.mx.options.draggablePlugin
+  yScan.pathChart.series[1].plugins.draggable = dragActivated
+   ? yScan.pathChart.mx.options.draggablePlugin
    : undefined;
-  pathChart.plugins.cursor._zoom = zoomActivated
-   ? pathChart.plugins.cursor._zoom = pathChart.mx.options.zoomPlugin
+  yScan.pathChart.plugins.cursor._zoom = zoomActivated
+   ? yScan.pathChart.plugins.cursor._zoom = yScan.pathChart.mx.options.zoomPlugin
    : undefined;
 }
 
 
 function onOpenYOffsetDialog() {
   var input = document.getElementById('y-offset-modal-input');
-  input.value = yOffset;
+  input.value = yScan.yOffset;
   $('#y-offset-modal-dialog').modal('show');
 }
 
 
 function onYOffsetDialogOkClick() {
   var input = document.getElementById('y-offset-modal-input');
-  yOffset = input.value;
+  yScan.yOffset = input.value;
   $('#y-offset-modal-dialog').modal('hide');
   new Promise(() => {
     readModifiedWeldingPathData();
-    filterPath(modifiedWeldingPathData);
-    refreshWeldingPathTable(modifiedWeldingPathData);
-    refreshPathChart(modifiedWeldingPathData, {
+    filterPath(yScan.modifiedWeldingPathData);
+    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
+    refreshPathChart(yScan.modifiedWeldingPathData, {
       resetAxes: false,
     });
   });
@@ -840,28 +830,28 @@ function prepareDialogs() {
 
 
 function onClearSelectionButtonClick() {
-  if (!chartSelection.state) {
+  if (!yScan.chartSelection.state) {
     $('#chart-selection-info-modal-dialog').modal('show');
   }
   else {
-    chartSelection.state = null;
-    let objects = pathChart.plugins.canvasOverlay.objects;
+    yScan.chartSelection.state = null;
+    let objects = yScan.pathChart.plugins.canvasOverlay.objects;
     let rect = objects[0];
     let line = objects[1];
     rect.options.xmin = -1001;
     rect.options.xmax = -1000;
     line.options.x = -1000;
-    pathChart.replot();
+    yScan.pathChart.replot();
   }
 }
 
 
 function onSetStatusClick() {
   refreshAll(function() {
-    let allRows = pathTable.getSelectedRows();
+    let allRows = yScan.pathTable.getSelectedRows();
     for(let row of allRows) {
       var index = row.getPosition();
-      modifiedWeldingPathData[index].status = 1;
+      yScan.modifiedWeldingPathData[index].status = 1;
     }
   });
 }
@@ -869,7 +859,7 @@ function onSetStatusClick() {
 
 function onSetStatusForAllClick() {
   refreshAll(function() {
-    for(let item of modifiedWeldingPathData) {
+    for(let item of yScan.modifiedWeldingPathData) {
       item.status = 1;
     }
   });
@@ -878,17 +868,17 @@ function onSetStatusForAllClick() {
 
 function onClearStatusClick() {
   refreshAll(function() {
-    let allRows = pathTable.getSelectedRows();
+    let allRows = yScan.pathTable.getSelectedRows();
     for(let row of allRows) {
       var index = row.getPosition();
-      modifiedWeldingPathData[index].status = 0;
+      yScan.modifiedWeldingPathData[index].status = 0;
     }
   });
 }
 
 
 function onClearRowsSelectionClick() {
-  pathTable.deselectRow();
+  yScan.pathTable.deselectRow();
 }
 
 
@@ -898,10 +888,10 @@ function refreshAll(cb) {
     if (cb) {
       cb();
     }
-    filterPath(modifiedWeldingPathData);
-    refreshPathChart(modifiedWeldingPathData);
-    refreshWeldingPathTable(modifiedWeldingPathData);
-    refreshDotsCountLabels(modifiedWeldingPathData);
+    filterPath(yScan.modifiedWeldingPathData);
+    refreshPathChart(yScan.modifiedWeldingPathData);
+    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
+    refreshDotsCountLabels(yScan.modifiedWeldingPathData);
   });
 }
 
@@ -920,10 +910,10 @@ function onSetStatusInRangeClick(status) {
   okButton.onclick = () => onSetStatusInRangeDialogOkClick(status);
 
   var fromInput = document.getElementById("set-clear-status-in-range-from-input");
-  fromInput.value = tableSelection.fromIndex;
+  fromInput.value = yScan.tableSelection.fromIndex;
 
   var toInput = document.getElementById("set-clear-status-in-range-to-input");
-  toInput.value = tableSelection.toIndex;
+  toInput.value = yScan.tableSelection.toIndex;
 
   $('#set-clear-status-in-range-modal-dialog').modal('show');
 }
@@ -938,24 +928,24 @@ function onSetStatusInRangeDialogOkClick(status) {
   $('#set-clear-status-in-range-modal-dialog').modal('hide');
 
   var fromInput = document.getElementById("set-clear-status-in-range-from-input");
-  tableSelection.fromIndex = fromInput.value;
+  yScan.tableSelection.fromIndex = fromInput.value;
 
   var toInput = document.getElementById("set-clear-status-in-range-to-input");
-  tableSelection.toIndex = toInput.value;
+  yScan.tableSelection.toIndex = toInput.value;
 
-  var fromIndex = parseInt(tableSelection.fromIndex);
-  var toIndex = parseInt(tableSelection.toIndex);
+  var fromIndex = parseInt(yScan.tableSelection.fromIndex);
+  var toIndex = parseInt(yScan.tableSelection.toIndex);
 
   if (!isNaN(fromIndex) && !isNaN(toIndex)) {
     if (fromIndex < 0) {
       fromIndex = 0;
     }
     refreshAll(function() {
-      if (toIndex >= modifiedWeldingPathData.length) {
-        toIndex = modifiedWeldingPathData.length - 1;
+      if (toIndex >= yScan.modifiedWeldingPathData.length) {
+        toIndex = yScan.modifiedWeldingPathData.length - 1;
       }
       for(let i = fromIndex; i <= toIndex; i++) {
-        modifiedWeldingPathData[i].status = status;
+        yScan.modifiedWeldingPathData[i].status = status;
       }
     });
   }
@@ -964,30 +954,30 @@ function onSetStatusInRangeDialogOkClick(status) {
 
 function onChartClick(event, gridPos, dataPos) {
   if(ctrlKey) {
-    let objects = pathChart.plugins.canvasOverlay.objects;
+    let objects = yScan.pathChart.plugins.canvasOverlay.objects;
     let rect = objects[0];
     let line = objects[1];
     let x = dataPos.xaxis;
 
-    switch(chartSelection.state) {
+    switch(yScan.chartSelection.state) {
       case null:
       case 'rect':
         rect.options.xmin = -1001;
         rect.options.xmax = -1000;
         line.options.x = x;
-        chartSelection.x0 = x;
-        chartSelection.x1 = x;
-        chartSelection.state = 'line';
+        yScan.chartSelection.x0 = x;
+        yScan.chartSelection.x1 = x;
+        yScan.chartSelection.state = 'line';
         break;
       case 'line':
         line.options.x = -1000;
-        chartSelection['x' + (x < chartSelection.x0 ? '0' : '1')] = x;
-        rect.options.xmin = chartSelection.x0;
-        rect.options.xmax = chartSelection.x1;
-        chartSelection.state = 'rect';
+        yScan.chartSelection['x' + (x < yScan.chartSelection.x0 ? '0' : '1')] = x;
+        rect.options.xmin = yScan.chartSelection.x0;
+        rect.options.xmax = yScan.chartSelection.x1;
+        yScan.chartSelection.state = 'rect';
     }
 
-    pathChart.replot();
+    yScan.pathChart.replot();
   }
 }
 
@@ -1010,7 +1000,7 @@ function onChartContextMenu(event) {
 
 function onChartSelectionYMoveClick() {
   var yMoveEl = document.getElementById('chart-selection-y-move-modal-input');
-  yMoveEl.value = chartSelection.yMove;
+  yMoveEl.value = yScan.chartSelection.yMove;
 
   $('#chart-selection-y-move-modal-dialog').modal('show');
 }
@@ -1020,21 +1010,21 @@ function onChartSelectionYMoveDialogOkClick() {
   $('#chart-selection-y-move-modal-dialog').modal('hide');
 
   var yMoveEl = document.getElementById('chart-selection-y-move-modal-input');
-  chartSelection.yMove = yMoveEl.value;
+  yScan.chartSelection.yMove = yMoveEl.value;
 
-  var yMove = parseFloat(chartSelection.yMove);
+  var yMove = parseFloat(yScan.chartSelection.yMove);
   if (isNaN(yMove) ||
-      chartSelection.state != 'rect') {
+      yScan.chartSelection.state != 'rect') {
     return;
   }
 
-  var x = chartSelection.x0;
-  var x1 = chartSelection.x1;
-  var tableData = pathTable.getData();
+  var x = yScan.chartSelection.x0;
+  var x1 = yScan.chartSelection.x1;
+  var tableData = yScan.pathTable.getData();
   var kX = 1; // constants.kX
   var dotTableIndex = Math.round(x/kX);
   while(x < x1) {
-    var item = originalWeldingPathData[dotTableIndex];
+    var item = yScan.originalWeldingPathData[dotTableIndex];
     tableData[dotTableIndex].valid = item.status != 0;
     tableData[dotTableIndex].y = item.y;
     if (tableData[dotTableIndex].valid) {
@@ -1047,11 +1037,11 @@ function onChartSelectionYMoveDialogOkClick() {
   }
 
   new Promise(() => {
-    pathTable.replaceData(tableData);
+    yScan.pathTable.replaceData(tableData);
     readModifiedWeldingPathData();
-    filterPath(modifiedWeldingPathData);
-    refreshWeldingPathTable(modifiedWeldingPathData);
-    refreshPathChart(modifiedWeldingPathData, {
+    filterPath(yScan.modifiedWeldingPathData);
+    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
+    refreshPathChart(yScan.modifiedWeldingPathData, {
       resetAxes: false,
     });
   });
@@ -1060,10 +1050,10 @@ function onChartSelectionYMoveDialogOkClick() {
 
 function onChartRangeSelectionClick() {
   var fromEl = document.getElementById('chart-range-selection-from-input');
-  fromEl.value = chartSelection.index0;
+  fromEl.value = yScan.chartSelection.index0;
 
   var toEl = document.getElementById('chart-range-selection-to-input');
-  toEl.value = chartSelection.index1;
+  toEl.value = yScan.chartSelection.index1;
 
   $('#chart-range-selection-modal-dialog').modal('show');
 }
@@ -1073,36 +1063,36 @@ function onChartRangeSelectionDialogOkClick() {
   $('#chart-range-selection-modal-dialog').modal('hide');
 
   var fromEl = document.getElementById('chart-range-selection-from-input');
-  chartSelection.index0 = fromEl.value;
+  yScan.chartSelection.index0 = fromEl.value;
 
   var toEl = document.getElementById('chart-range-selection-to-input');
-  chartSelection.index1 = toEl.value;
+  yScan.chartSelection.index1 = toEl.value;
 
-  var index0 = parseFloat(chartSelection.index0);
-  var index1 = parseFloat(chartSelection.index1);
+  var index0 = parseFloat(yScan.chartSelection.index0);
+  var index1 = parseFloat(yScan.chartSelection.index1);
 
   var correctSelection = !isNaN(index0) && !isNaN(index1) && index0 < index1;
 
   var kX = 1.0;
 
-  var objects = pathChart.plugins.canvasOverlay.objects;
+  var objects = yScan.pathChart.plugins.canvasOverlay.objects;
   var rect = objects[0];
   var line = objects[1];
 
   line.options.x = -1000;
 
   if (correctSelection) {
-    chartSelection.state = 'rect';
-    chartSelection.x0 = kX * index0;
-    chartSelection.x1 = kX * index1;
-    rect.options.xmin = chartSelection.x0;
-    rect.options.xmax = chartSelection.x1;
+    yScan.chartSelection.state = 'rect';
+    yScan.chartSelection.x0 = kX * index0;
+    yScan.chartSelection.x1 = kX * index1;
+    rect.options.xmin = yScan.chartSelection.x0;
+    rect.options.xmax = yScan.chartSelection.x1;
   }
   else {
-    chartSelection.state = null;
+    yScan.chartSelection.state = null;
     rect.options.xmin = -1001;
     rect.options.xmax = -1000;
   }
 
-  pathChart.replot();
+  yScan.pathChart.replot();
 }
