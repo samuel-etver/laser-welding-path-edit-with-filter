@@ -5,16 +5,10 @@ const constants = require('./constants.js');
 const filters = require('./path_filter.js');
 
 var readButton;
-var writeButton;
-var yOffsetButton;
-var zoomButton;
-var dragButton;
-var clearSelectionButton;
-var chartButtonsPanel;
-var allDotsCountLabel;
-var badDotsCountLabel;
-var goodDotsCountLabel;
 var yScan = {
+  allDotsCountLabel: undefined,
+  badDotsCountLabel: undefined,
+  goodDotsCountLabel: undefined,
   originalWeldingPathData: [],
   modifiedWeldingPathData: [],
   yOffset: 0,
@@ -54,13 +48,13 @@ window.onload = function() {
   ipc.on('open-error-dialog', (event, arg) => onOpenErrorDialog(arg));
   ipc.on('open-write-success-dialog', () => onOpenWriteSuccessDialog());
 
-  yOffsetButton = document.getElementById('y-offset-button');
+  var yOffsetButton = document.getElementById('y-offset-button');
   yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
 
   readButton = document.getElementById('read-button');
   readButton.addEventListener('click', readPathFromSimatic);
 
-  writeButton = document.getElementById('write-button');
+  var writeButton = document.getElementById('write-button');
   writeButton.addEventListener('click', onWriteButtonClick);
 
   var resetModificationButton = document.getElementById('reset-modification-button');
@@ -77,20 +71,18 @@ window.onload = function() {
   var exitButton = document.getElementById('exit-button');
   exitButton.addEventListener('click', () => window.close());
 
-  zoomButton = document.getElementById('zoom-button');
+  var zoomButton = document.getElementById('zoom-button');
   zoomButton.addEventListener('click', onChartButtonClick);
 
-  dragButton = document.getElementById('drag-button');
+  var dragButton = document.getElementById('drag-button');
   dragButton.addEventListener('click', onChartButtonClick);
 
-  clearSelectionButton = document.getElementById("clear-selection-button");
+  var clearSelectionButton = document.getElementById("clear-selection-button");
   clearSelectionButton.addEventListener('click', onClearSelectionButtonClick);
 
-  chartButtonsPanel = document.getElementById('chart-buttons-panel');
-
-  allDotsCountLabel = document.getElementById('all-dots-count-label');
-  badDotsCountLabel = document.getElementById('bad-dots-count-label');
-  goodDotsCountLabel = document.getElementById('good-dots-count-label');
+  yScan.allDotsCountLabel = document.getElementById('all-dots-count-label');
+  yScan.badDotsCountLabel = document.getElementById('bad-dots-count-label');
+  yScan.goodDotsCountLabel = document.getElementById('good-dots-count-label');
 
   $.jqplot.config.enablePlugins = true;
   yScan.pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
@@ -594,7 +586,7 @@ function onDotsCountDialogOkClick() {
       newSize = constants.dotsCountMax;
     }
     if ( newSize != yScan.modifiedWeldingPathData.length ) {
-      allDotsCountLabel.textContent = newSize;
+      yScan.allDotsCountLabel.textContent = newSize;
       new Promise(() => {
         resizeWeldingData(newSize);
       });
@@ -645,10 +637,10 @@ function refreshDotsCountLabels(data) {
       goodDots++;
     }
   }
-  goodDotsCountLabel.textContent = goodDots;
+  yScan.goodDotsCountLabel.textContent = goodDots;
 
   var badDots = data.length - goodDots;
-  badDotsCountLabel.textContent = badDots;
+  yScan.badDotsCountLabel.textContent = badDots;
 }
 
 
