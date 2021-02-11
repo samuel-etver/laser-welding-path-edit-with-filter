@@ -6,6 +6,7 @@ const filters = require('./path_filter.js');
 
 var readButton;
 var yScan = {
+  name: 'yScan',
   allDotsCountLabel: undefined,
   badDotsCountLabel: undefined,
   goodDotsCountLabel: undefined,
@@ -27,6 +28,9 @@ var yScan = {
     toIndex: null
   }
 };
+var allScans = [
+  yScan
+];
 var draggedDotIndex;
 var ctrlKey;
 var dragStartY;
@@ -205,6 +209,18 @@ window.onload = function() {
 
   setChartState();
 
+  for(let scan of allScans) {
+    buildPathTable(scan);
+  }
+
+  prepareDialogs();
+
+  window.addEventListener('resize', event => onResizeWindow(event));
+  onResizeWindow()
+}
+
+
+function buildPathTable(scan) {
   var columnYFormatter =  (cell, formatterParams, onRendered) => {
     var value = cell.getValue();
     if ( value === undefined ) {
@@ -215,8 +231,8 @@ window.onload = function() {
   var columnXWidth = 59;
   var columnYWidth = columnXWidth;
 
-
-  yScan.pathTable = new tabulator("#path-table", {
+  var tableId = '#' + scan.name.toLowerCase() + '-path-table';
+  scan.pathTable = new tabulator(tableId, {
     autoResize: true,
     rowContextMenu: [
       {
@@ -305,11 +321,6 @@ window.onload = function() {
     ],
     dataEdited: onPathTableDataEdited,
   });
-
-  prepareDialogs();
-
-  window.addEventListener('resize', event => onResizeWindow(event));
-  onResizeWindow()
 }
 
 
@@ -343,26 +354,26 @@ window.onkeyup = function(event) {
 function onWriteButtonClick() {
   var globalVars = ipc.sendSync('get-global', [
     'controllerIp',
-    'blockNumber',
-    'yArrayAddress',
-    'yStatusArrayAddress',
-    'numberOfDotsAddress'
+    'yScan.blockNumber',
+    'yScan.yArrayAddress',
+    'yScan.yStatusArrayAddress',
+    'yScan.numberOfDotsAddress'
   ]);
 
   var idPrefix = 'write-confirmation-modal-dialog-';
   var setVar = function(name, value, valuePrefix) {
-  var el = document.getElementById(idPrefix + name);
-  el.innerHTML =
-    '<b>' +
-    (value ? (valuePrefix ? valuePrefix : '') + value : '?') +
-    '</b>';
-  }
+    var el = document.getElementById(idPrefix + name);
+    el.innerHTML =
+      '<b>' +
+      (value ? (valuePrefix ? valuePrefix : '') + value : '?') +
+      '</b>';
+  };
 
   setVar('ip', globalVars.controllerIp);
-  setVar('block-number', globalVars.blockNumber, 'DB');
-  setVar('number-of-dots-address', globalVars.numberOfDotsAddress);
-  setVar('y-array-address', globalVars.yArrayAddress);
-  setVar('y-status-array-address', globalVars.yStatusArrayAddress);
+  setVar('block-number', globalVars['yScan.blockNumber'], 'DB');
+  setVar('number-of-dots-address', globalVars['yScan.numberOfDotsAddress']);
+  setVar('y-array-address', globalVars['yScan.yArrayAddress']);
+  setVar('y-status-array-address', globalVars['yScan.yStatusArrayAddress']);
 
   $('#write-confirmation-modal-dialog').modal('show');
 }
@@ -597,12 +608,13 @@ function onDotsCountDialogOkClick() {
 
 
 function onPathTableDataEdited(data) {
+  var activeScan = getActiveScan();
   new Promise(() => {
     readModifiedWeldingPathData();
-    filterPath(yScan.modifiedWeldingPathData);
-    refreshPathChart(yScan.modifiedWeldingPathData, { resetAxes: false });
-    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
-    refreshDotsCountLabels(yScan.modifiedWeldingPathData);
+    filterPath(activeScan.modifiedWeldingPathData);
+    refreshPathChart(activeScan.modifiedWeldingPathData, { resetAxes: false });
+    refreshWeldingPathTable(activeScan.modifiedWeldingPathData);
+    refreshDotsCountLabels(activeScan.modifiedWeldingPathData);
   });
 }
 
@@ -646,28 +658,34 @@ function refreshDotsCountLabels(data) {
 
 
 function onOpenOptionsDialog() {
-  var globalVars = ipc.sendSync('get-global', [
+  var varNames = [
     'controllerIp',
-    'blockNumber',
-    'yArrayAddress',
-    'yStatusArrayAddress',
-    'numberOfDotsAddress'
-  ]);
+  ];
+  for (var scan of allScans) {
+    var scanName = scan.name + '.';
+    varNames.push(
+      scanName + 'blockNumber',
+      scanName + 'yArrayAddress',
+      scanName + 'yStatusArrayAddress',
+      scanName + 'numberOfDotsAddress');
+  }
+
+  var globalVars = ipc.sendSync('get-global', varNames);
 
   var ipInput = document.getElementById('ip-input');
   ipInput.value = globalVars.controllerIp;
 
   var blockNumberInput = document.getElementById('block-number-input');
-  blockNumberInput.value = globalVars.blockNumber;
+  blockNumberInput.value = globalVars['yScan.blockNumber'];
 
   var yArrayAddressInput = document.getElementById('y-array-address-input');
-  yArrayAddressInput.value = globalVars.yArrayAddress;
+  yArrayAddressInput.value = globalVars['yScan.yArrayAddress'];
 
   var yStatusArrayAddressInput = document.getElementById('y-status-array-address-input');
-  yStatusArrayAddressInput.value = globalVars.yStatusArrayAddress;
+  yStatusArrayAddressInput.value = globalVars['yScan.yStatusArrayAddress'];
 
   var numberOfDotsAddressInput = document.getElementById('number-of-dots-address-input');
-  numberOfDotsAddressInput.value = globalVars.numberOfDotsAddress;
+  numberOfDotsAddressInput.value = globalVars['yScan.numberOfDotsAddress'];
 
   $('#options-modal-dialog').modal('show');
 }
@@ -682,10 +700,10 @@ function onOptionsDialogOkClick() {
 
   ipc.sendSync('set-global', {
     controllerIp: ipInput.value,
-    blockNumber:  blockNumberInput.value,
-    yArrayAddress:       yArrayAddressInput.value,
-    yStatusArrayAddress: yStatusArrayAddressInput.value,
-    numberOfDotsAddress: numberOfDotsAddressInput.value,
+    'yScan.blockNumber':  blockNumberInput.value,
+    'yScan.yArrayAddress':       yArrayAddressInput.value,
+    'yScan.yStatusArrayAddress': yStatusArrayAddressInput.value,
+    'yScan.numberOfDotsAddress': numberOfDotsAddressInput.value,
   });
 
   $('#options-modal-dialog').modal('hide');
@@ -710,39 +728,45 @@ function openConfirmationDialog(msg, func) {
   $('#confirmation-modal-dialog').modal('show');
 }
 
+
 function onChartButtonClick() {
   setChartState();
 }
 
+
 function setChartState() {
+  var activeScan = getActiveScan();
+
   var zoomActivated = document.getElementById('chart-zoom-state').checked;
   var dragActivated = document.getElementById('chart-drag-state').checked;
 
-  yScan.pathChart.series[1].plugins.draggable = dragActivated
-   ? yScan.pathChart.mx.options.draggablePlugin
+  activeScan.pathChart.series[1].plugins.draggable = dragActivated
+   ? activeScan.pathChart.mx.options.draggablePlugin
    : undefined;
-  yScan.pathChart.plugins.cursor._zoom = zoomActivated
-   ? yScan.pathChart.plugins.cursor._zoom = yScan.pathChart.mx.options.zoomPlugin
+  activeScan.pathChart.plugins.cursor._zoom = zoomActivated
+   ? activeScan.pathChart.plugins.cursor._zoom = activeScan.pathChart.mx.options.zoomPlugin
    : undefined;
 }
 
 
 function onOpenYOffsetDialog() {
+  var activeScan = getActiveScan();
   var input = document.getElementById('y-offset-modal-input');
-  input.value = yScan.yOffset;
+  input.value = activeScan.yOffset;
   $('#y-offset-modal-dialog').modal('show');
 }
 
 
 function onYOffsetDialogOkClick() {
+  var activeScan = getActiveScan();
   var input = document.getElementById('y-offset-modal-input');
-  yScan.yOffset = input.value;
+  activeScan.yOffset = input.value;
   $('#y-offset-modal-dialog').modal('hide');
   new Promise(() => {
     readModifiedWeldingPathData();
-    filterPath(yScan.modifiedWeldingPathData);
-    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
-    refreshPathChart(yScan.modifiedWeldingPathData, {
+    filterPath(activeScan.modifiedWeldingPathData);
+    refreshWeldingPathTable(activeScan.modifiedWeldingPathData);
+    refreshPathChart(activeScan.modifiedWeldingPathData, {
       resetAxes: false,
     });
   });
@@ -822,36 +846,40 @@ function prepareDialogs() {
 
 
 function onClearSelectionButtonClick() {
-  if (!yScan.chartSelection.state) {
+  var activeScan = getActiveScan();
+
+  if (!activeScan.chartSelection.state) {
     $('#chart-selection-info-modal-dialog').modal('show');
   }
   else {
-    yScan.chartSelection.state = null;
-    let objects = yScan.pathChart.plugins.canvasOverlay.objects;
+    activeScan.chartSelection.state = null;
+    let objects = activeScan.pathChart.plugins.canvasOverlay.objects;
     let rect = objects[0];
     let line = objects[1];
     rect.options.xmin = -1001;
     rect.options.xmax = -1000;
     line.options.x = -1000;
-    yScan.pathChart.replot();
+    activeScan.pathChart.replot();
   }
 }
 
 
 function onSetStatusClick() {
+  var activeScan = getActiveScan();
   refreshAll(function() {
-    let allRows = yScan.pathTable.getSelectedRows();
+    let allRows = activeScan.pathTable.getSelectedRows();
     for(let row of allRows) {
       var index = row.getPosition();
-      yScan.modifiedWeldingPathData[index].status = 1;
+      activeScan.modifiedWeldingPathData[index].status = 1;
     }
   });
 }
 
 
 function onSetStatusForAllClick() {
+  var activeScan = getActiveScan();
   refreshAll(function() {
-    for(let item of yScan.modifiedWeldingPathData) {
+    for(let item of activeScan.modifiedWeldingPathData) {
       item.status = 1;
     }
   });
@@ -859,18 +887,20 @@ function onSetStatusForAllClick() {
 
 
 function onClearStatusClick() {
+  var activeScan = getActiveScan();
   refreshAll(function() {
-    let allRows = yScan.pathTable.getSelectedRows();
+    let allRows = activeScan.pathTable.getSelectedRows();
     for(let row of allRows) {
       var index = row.getPosition();
-      yScan.modifiedWeldingPathData[index].status = 0;
+      activeScan.modifiedWeldingPathData[index].status = 0;
     }
   });
 }
 
 
 function onClearRowsSelectionClick() {
-  yScan.pathTable.deselectRow();
+  var activeScan = getActiveScan();
+  activeScan.pathTable.deselectRow();
 }
 
 
@@ -889,6 +919,8 @@ function refreshAll(cb) {
 
 
 function onSetStatusInRangeClick(status) {
+  var activeScan = getActiveScan();
+
   if (status === undefined) {
     status = true;
   }
@@ -902,10 +934,10 @@ function onSetStatusInRangeClick(status) {
   okButton.onclick = () => onSetStatusInRangeDialogOkClick(status);
 
   var fromInput = document.getElementById("set-clear-status-in-range-from-input");
-  fromInput.value = yScan.tableSelection.fromIndex;
+  fromInput.value = activeScan.tableSelection.fromIndex;
 
   var toInput = document.getElementById("set-clear-status-in-range-to-input");
-  toInput.value = yScan.tableSelection.toIndex;
+  toInput.value = activeScan.tableSelection.toIndex;
 
   $('#set-clear-status-in-range-modal-dialog').modal('show');
 }
@@ -919,25 +951,27 @@ function onClearStatusInRangeClick() {
 function onSetStatusInRangeDialogOkClick(status) {
   $('#set-clear-status-in-range-modal-dialog').modal('hide');
 
+  var activeScan = getActiveScan();
+
   var fromInput = document.getElementById("set-clear-status-in-range-from-input");
-  yScan.tableSelection.fromIndex = fromInput.value;
+  activeScan.tableSelection.fromIndex = fromInput.value;
 
   var toInput = document.getElementById("set-clear-status-in-range-to-input");
-  yScan.tableSelection.toIndex = toInput.value;
+  activeScan.tableSelection.toIndex = toInput.value;
 
-  var fromIndex = parseInt(yScan.tableSelection.fromIndex);
-  var toIndex = parseInt(yScan.tableSelection.toIndex);
+  var fromIndex = parseInt(activeScan.tableSelection.fromIndex);
+  var toIndex = parseInt(activeScan.tableSelection.toIndex);
 
   if (!isNaN(fromIndex) && !isNaN(toIndex)) {
     if (fromIndex < 0) {
       fromIndex = 0;
     }
     refreshAll(function() {
-      if (toIndex >= yScan.modifiedWeldingPathData.length) {
-        toIndex = yScan.modifiedWeldingPathData.length - 1;
+      if (toIndex >= activeScan.modifiedWeldingPathData.length) {
+        toIndex = activeScan.modifiedWeldingPathData.length - 1;
       }
       for(let i = fromIndex; i <= toIndex; i++) {
-        yScan.modifiedWeldingPathData[i].status = status;
+        activeScan.modifiedWeldingPathData[i].status = status;
       }
     });
   }
@@ -946,30 +980,32 @@ function onSetStatusInRangeDialogOkClick(status) {
 
 function onChartClick(event, gridPos, dataPos) {
   if(ctrlKey) {
-    let objects = yScan.pathChart.plugins.canvasOverlay.objects;
+    let activeScan = getActiveScan();
+
+    let objects = activeScan.pathChart.plugins.canvasOverlay.objects;
     let rect = objects[0];
     let line = objects[1];
     let x = dataPos.xaxis;
 
-    switch(yScan.chartSelection.state) {
+    switch(activeScan.chartSelection.state) {
       case null:
       case 'rect':
         rect.options.xmin = -1001;
         rect.options.xmax = -1000;
         line.options.x = x;
-        yScan.chartSelection.x0 = x;
-        yScan.chartSelection.x1 = x;
-        yScan.chartSelection.state = 'line';
+        activeScan.chartSelection.x0 = x;
+        activeScan.chartSelection.x1 = x;
+        activeScan.chartSelection.state = 'line';
         break;
       case 'line':
         line.options.x = -1000;
-        yScan.chartSelection['x' + (x < yScan.chartSelection.x0 ? '0' : '1')] = x;
-        rect.options.xmin = yScan.chartSelection.x0;
-        rect.options.xmax = yScan.chartSelection.x1;
-        yScan.chartSelection.state = 'rect';
+        activeScan.chartSelection['x' + (x < activeScan.chartSelection.x0 ? '0' : '1')] = x;
+        rect.options.xmin = activeScan.chartSelection.x0;
+        rect.options.xmax = activeScan.chartSelection.x1;
+        activeScan.chartSelection.state = 'rect';
     }
 
-    yScan.pathChart.replot();
+    activeScan.pathChart.replot();
   }
 }
 
@@ -991,8 +1027,10 @@ function onChartContextMenu(event) {
 
 
 function onChartSelectionYMoveClick() {
+  var activeScan = getActiveScan();
+
   var yMoveEl = document.getElementById('chart-selection-y-move-modal-input');
-  yMoveEl.value = yScan.chartSelection.yMove;
+  yMoveEl.value = activeScan.chartSelection.yMove;
 
   $('#chart-selection-y-move-modal-dialog').modal('show');
 }
@@ -1001,22 +1039,24 @@ function onChartSelectionYMoveClick() {
 function onChartSelectionYMoveDialogOkClick() {
   $('#chart-selection-y-move-modal-dialog').modal('hide');
 
-  var yMoveEl = document.getElementById('chart-selection-y-move-modal-input');
-  yScan.chartSelection.yMove = yMoveEl.value;
+  var activeScan = getActiveScan();
 
-  var yMove = parseFloat(yScan.chartSelection.yMove);
+  var yMoveEl = document.getElementById('chart-selection-y-move-modal-input');
+  activeScan.chartSelection.yMove = yMoveEl.value;
+
+  var yMove = parseFloat(activeScan.chartSelection.yMove);
   if (isNaN(yMove) ||
-      yScan.chartSelection.state != 'rect') {
+      activeScan.chartSelection.state != 'rect') {
     return;
   }
 
-  var x = yScan.chartSelection.x0;
-  var x1 = yScan.chartSelection.x1;
-  var tableData = yScan.pathTable.getData();
+  var x = activeScan.chartSelection.x0;
+  var x1 = activeScan.chartSelection.x1;
+  var tableData = activeScan.pathTable.getData();
   var kX = 1; // constants.kX
   var dotTableIndex = Math.round(x/kX);
   while(x < x1) {
-    var item = yScan.originalWeldingPathData[dotTableIndex];
+    var item = activeScan.originalWeldingPathData[dotTableIndex];
     tableData[dotTableIndex].valid = item.status != 0;
     tableData[dotTableIndex].y = item.y;
     if (tableData[dotTableIndex].valid) {
@@ -1029,11 +1069,11 @@ function onChartSelectionYMoveDialogOkClick() {
   }
 
   new Promise(() => {
-    yScan.pathTable.replaceData(tableData);
+    activeScan.pathTable.replaceData(tableData);
     readModifiedWeldingPathData();
-    filterPath(yScan.modifiedWeldingPathData);
-    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
-    refreshPathChart(yScan.modifiedWeldingPathData, {
+    filterPath(activeScan.modifiedWeldingPathData);
+    refreshWeldingPathTable(activeScan.modifiedWeldingPathData);
+    refreshPathChart(activeScan.modifiedWeldingPathData, {
       resetAxes: false,
     });
   });
@@ -1041,11 +1081,13 @@ function onChartSelectionYMoveDialogOkClick() {
 
 
 function onChartRangeSelectionClick() {
+  var activeScan = getActiveScan();
+
   var fromEl = document.getElementById('chart-range-selection-from-input');
-  fromEl.value = yScan.chartSelection.index0;
+  fromEl.value = activeScan.chartSelection.index0;
 
   var toEl = document.getElementById('chart-range-selection-to-input');
-  toEl.value = yScan.chartSelection.index1;
+  toEl.value = activeScan.chartSelection.index1;
 
   $('#chart-range-selection-modal-dialog').modal('show');
 }
@@ -1054,37 +1096,44 @@ function onChartRangeSelectionClick() {
 function onChartRangeSelectionDialogOkClick() {
   $('#chart-range-selection-modal-dialog').modal('hide');
 
+  var activeScan = getActiveScan();
+
   var fromEl = document.getElementById('chart-range-selection-from-input');
-  yScan.chartSelection.index0 = fromEl.value;
+  activeScan.chartSelection.index0 = fromEl.value;
 
   var toEl = document.getElementById('chart-range-selection-to-input');
-  yScan.chartSelection.index1 = toEl.value;
+  activeScan.chartSelection.index1 = toEl.value;
 
-  var index0 = parseFloat(yScan.chartSelection.index0);
-  var index1 = parseFloat(yScan.chartSelection.index1);
+  var index0 = parseFloat(activeScan.chartSelection.index0);
+  var index1 = parseFloat(activeScan.chartSelection.index1);
 
   var correctSelection = !isNaN(index0) && !isNaN(index1) && index0 < index1;
 
   var kX = 1.0;
 
-  var objects = yScan.pathChart.plugins.canvasOverlay.objects;
+  var objects = activeScan.pathChart.plugins.canvasOverlay.objects;
   var rect = objects[0];
   var line = objects[1];
 
   line.options.x = -1000;
 
   if (correctSelection) {
-    yScan.chartSelection.state = 'rect';
-    yScan.chartSelection.x0 = kX * index0;
-    yScan.chartSelection.x1 = kX * index1;
-    rect.options.xmin = yScan.chartSelection.x0;
-    rect.options.xmax = yScan.chartSelection.x1;
+    activeScan.chartSelection.state = 'rect';
+    activeScan.chartSelection.x0 = kX * index0;
+    activeScan.chartSelection.x1 = kX * index1;
+    rect.options.xmin = activeScan.chartSelection.x0;
+    rect.options.xmax = activeScan.chartSelection.x1;
   }
   else {
-    yScan.chartSelection.state = null;
+    activeScan.chartSelection.state = null;
     rect.options.xmin = -1001;
     rect.options.xmax = -1000;
   }
 
-  yScan.pathChart.replot();
+  activeScan.pathChart.replot();
+}
+
+
+function getActiveScan() {
+  return yScan;
 }

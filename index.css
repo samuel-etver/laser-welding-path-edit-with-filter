@@ -30,9 +30,9 @@ body {
     position: relative;
 }
 
-#path-table {
-    width: 100%;
+.path-table {
     height: 100%;
+    width: 300px;
     border: 1px solid;
     border-radius: 1rem;
     box-shadow: 0.1rem -0.1rem 1rem rgba(0, 0, 0, 0.7);

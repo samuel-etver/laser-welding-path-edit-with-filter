@@ -1,26 +1,32 @@
-const electron = require('electron')
-const app = electron.app
-const BrowserWindow = electron.BrowserWindow
-const Menu = electron.Menu
-const ipc = electron.ipcMain
-const dialog = electron.dialog
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
-const csvWriter = require('csv-writer')
-const csvParser = require('csv-parser')
-const xmldom = require('xmldom')
+const electron = require('electron');
+const app = electron.app;
+const BrowserWindow = electron.BrowserWindow;
+const Menu = electron.Menu;
+const ipc = electron.ipcMain;
+const dialog = electron.dialog;
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const csvWriter = require('csv-writer');
+const csvParser = require('csv-parser');
+const xmldom = require('xmldom');
 const nodes7 = require('nodes7');
-const config = require('./config.js')
-const constants = require('./constants.js')
+const config = require('./config.js');
+const constants = require('./constants.js');
 
-var mainWindow
-var aboutDialog
+var mainWindow;
+var aboutDialog;
 
-const configFileName = constants.appName + '.config'
+const configFileName = constants.appName + '.config';
 
 var globalVars = {
   controllerIp: '',
+  yScan: {
+    blockNumber: '',
+    yArrayAddress: '',
+    yStatusArrayAddress: '',
+    numberOfDotsAddress: '',
+  },
   blockNumber: '',
   yArrayAddress: '',
   yStatusArrayAddress: '',
@@ -29,14 +35,24 @@ var globalVars = {
   homeDir: path.join(process.env.APPDATA, constants.appName),
   writePathType: '',
   debug: false,
-}
-const configVars  = [
+};
+const configVars = [
   'controllerIp',
+  'yScan.blockNumber',
+  'yScan.yArrayAddress',
+  'yScan.yStatusArrayAddress',
+  'yScan.numberOfDotsAddress',
   'blockNumber',
   'yArrayAddress',
   'yStatusArrayAddress',
   'numberOfDotsAddress',
   'userPath',
+];
+const deprecatedConfigVars = [
+  'blockNumber',
+  'yArrayAddress',
+  'yStatusArrayAddress',
+  'numberOfDotsAddress',
 ];
 var yScan = {
   weldingPathData: []
@@ -44,7 +60,7 @@ var yScan = {
 
 var simaticConn;
 var simaticVars = {
-}
+};
 
 loadConfig();
 
@@ -157,18 +173,18 @@ function checkSimaticAddresses() {
   var selectText = txt => {
       return '<span style="background:pink">"' + txt + '"</span>';
   }
-
-  if ( !checkNumber(globalVars.blockNumber)) {
-      showError('Ошибка в номере блока: ' + selectText(globalVars.blockNumber) + '.');
+  
+  if ( !checkNumber(getGlobalVar('yScan.blockNumber'))) {
+      showError('Ошибка в номере блока: ' + selectText(getGlobalVar('yScan.blockNumber')) + '.');
   }
-  else if ( !checkNumber(globalVars.numberOfDotsAddress) ) {
-      showError('Ошибка в адресе<br><b>"Количество точек"</b>: ' + selectText(globalVars.numberOfDotsAddress) + '.');
+  else if ( !checkNumber(getGlobalVar('yScan.numberOfDotsAddress')) ) {
+      showError('Ошибка в адресе<br><b>"Количество точек"</b>: ' + selectText(getGlobalVar('yScan.numberOfDotsAddress')) + '.');
   }
-  else if ( !checkNumber(globalVars.yArrayAddress) ) {
-      showError('Ошибка в адресе массива<br><b>"Точки"</b>: ' + selectText(globalVars.yArrayAddress) + '.');
+  else if ( !checkNumber(getGlobalVar('yScan.yArrayAddress')) ) {
+      showError('Ошибка в адресе массива<br><b>"Точки"</b>: ' + selectText(getGlobalVar('yScan.yArrayAddress')) + '.');
   }
-  else if ( !checkNumber(globalVars.yStatusArrayAddress) ) {
-      showError('Ошибка в адресе массива<br><b>"Статусы точек"</b>: ' + selectText(globalVars.yStatusArrayAddress) + '.');
+  else if ( !checkNumber(getGlobalVar('yScan.yStatusArrayAddress')) ) {
+      showError('Ошибка в адресе массива<br><b>"Статусы точек"</b>: ' + selectText(getGlobalVar('yScan.yStatusArrayAddress')) + '.');
   }
   else {
       return true;
@@ -179,9 +195,9 @@ function checkSimaticAddresses() {
 
 
 function buildSimaticVars() {
-  var block = 'DB' + parseInt(globalVars.blockNumber) + ',';
+  var block = 'DB' + parseInt(getGlobalVar('yScan.blockNumber')) + ',';
   simaticVars.count =
-    block + 'INT' + parseInt(globalVars.numberOfDotsAddress);
+    block + 'INT' + parseInt(getGlobalVar('yScan.numberOfDotsAddress'));
   var n = constants.dotsCountMax;
   var i = 0;
   while ( n ) {
@@ -190,12 +206,12 @@ function buildSimaticVars() {
       packetSize = n;
     }
     simaticVars['yArr' + i] =
-      block + 'REAL' + (parseInt(globalVars.yArrayAddress) + i*4*constants.packetSize) + '.' + packetSize;
+      block + 'REAL' + (parseInt(getGlobalVar('yScan.yArrayAddress')) + i*4*constants.packetSize) + '.' + packetSize;
     i++;
     n -= packetSize;
   }
   simaticVars.yStatusArr =
-    block + 'BYTE' + parseInt(globalVars.yStatusArrayAddress) + '.' + (constants.dotsCountMax / 8);
+    block + 'BYTE' + parseInt(getGlobalVar('yScan.yStatusArrayAddress')) + '.' + (constants.dotsCountMax / 8);
 }
 
 
@@ -205,7 +221,7 @@ function communicateWithSimatic(communicate, failed) {
     simaticConn.initiateConnection(
       {
         port: 102,
-        host: globalVars.controllerIp,
+        host: getGlobalVar('controllerIp'),
         rack: 0,
         slot: 2
       },
@@ -318,10 +334,10 @@ function writePathToSimatic(sender, data) {
   var n = constants.dotsCountMax;
   var i;
 
-  var getY = globalVars.writePathType == 'after'
+  var getY = getGlobalVar('writePathType') == 'after'
     ? item => item.filteredY
     : item => item.y;
-  var getStatus = globalVars.writePathType == 'after'
+  var getStatus = getGlobalVar('writePathType') == 'after'
     ? item => true
     : item => item.status;
 
@@ -414,17 +430,25 @@ function openOptionsDialog() {
 
 
 function loadConfig() {
-  let configFilePath = path.join(globalVars.homeDir, configFileName);
+  let configFilePath = path.join(getGlobalVar('homeDir'), configFileName);
   let cfg = new config();
   cfg.load(configFilePath);
   for (key of configVars) {
-    globalVars[key] = cfg.get(key)||'';
+    setGlobalVar(key, cfg.get(key)||'');
+  }
+
+  for (key of deprecatedConfigVars) {
+    setGlobalVar('yScan.' + key, getGlobalVar(key));
   }
 }
 
 
 function saveConfig() {
-  let configFolder = globalVars.homeDir;
+  for (key of deprecatedConfigVars) {
+    setGlobalVar(key, getGlobalVar('yScan.' + key));
+  }
+
+  let configFolder = getGlobalVar('homeDir');
   if ( !fs.existsSync(configFolder) ) {
     fs.mkdirSync(configFolder, {recursive: true});
   }
@@ -432,7 +456,7 @@ function saveConfig() {
 
   let cfg = new config();
   for (key of configVars) {
-    cfg.set(key, globalVars[key]);
+    cfg.set(key, getGlobalVar(key));
   }
   cfg.save(path.join(configFolder, configFileName));
 }
@@ -441,7 +465,7 @@ function saveConfig() {
 function onGetGlobal(event, args) {
   var data = {};
   for (item of args) {
-    data[item] = globalVars[item];
+    data[item] = getGlobalVar(item);
   }
   event.returnValue = data;
 }
@@ -449,9 +473,7 @@ function onGetGlobal(event, args) {
 
 function onSetGlobal(event, args) {
   for (item in args) {
-    if ( item in globalVars ) {
-        globalVars[item] = args[item];
-    }
+    setGlobalVar(item, args[item]);
   }
   event.returnValue = true;
   saveConfig();
@@ -464,7 +486,7 @@ function onExitClick() {
 
 
 function onLoadClick() {
-  var defaultPath = globalVars.userPath;
+  var defaultPath = getGlobalVar('userPath');
 
   dialog.showOpenDialog(
     {
@@ -488,7 +510,7 @@ function onLoadClick() {
     }
   ).then(result => {
     var filename = result.filePaths[0];
-    globalVars.userPath = path.dirname(filename);
+    setGlobalVar('userPath', path.dirname(filename));
     saveConfig();
     loadFile(filename).then(
       () => {
@@ -646,7 +668,7 @@ function onSaveClick() {
     ipc.removeAllListeners('get-path-data-reply');
 
     yScan.weldingPathData = data;
-    var defaultPath = globalVars.userPath;
+    var defaultPath = getGlobalVar('userPath');
 
     dialog.showSaveDialog(
       {
@@ -675,8 +697,8 @@ function onSaveClick() {
         filename += ext;
       }
 
-      globalVars.debug = ext;
-      globalVars.userPath = path.dirname(filename);
+      setGlobalVar('debug', ext);
+      setGlobalVar('userPath', path.dirname(filename));
       saveConfig();
       saveFile(filename);
     });
@@ -772,7 +794,28 @@ function onAboutClick() {
   aboutDialog.on('ready-to-show', () => aboutDialog.show());
 }
 
+
 function closeAboutDialog() {
   aboutDialog.close();
   aboutDialog = null;
+}
+
+
+function getGlobalVar(name) {
+  var subNames = name.split('.');
+  var result = globalVars;
+  for (var n = 0; n < subNames.length; n++) {
+    result = result[subNames[n]];
+  }
+  return result;
+}
+
+
+function setGlobalVar(name, value) {
+  var subNames = name.split('.');
+  var result = globalVars;
+  for (var n = 0; n < subNames.length - 1; n++) {
+    result = result[subNames[n]];
+  }
+  result[subNames[n]] = value;
 }
