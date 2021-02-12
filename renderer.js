@@ -37,16 +37,19 @@ var dragStartY;
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
-    yScan.originalWeldingPathData = arg;
-    filterPath(arg);
-    refreshWeldingPathTable(arg);
-    refreshPathChart(arg);
-    refreshDotsCountLabels(arg);
+    var scan = yScan;
+    scan.originalWeldingPathData = arg;
+    scan.modifiedWeldingPathData = arg;
+    filterPath(scan);
+    refreshWeldingPathTable(scan);
+    refreshPathChart(scan);
+    refreshDotsCountLabels(scan);
   });
 
   ipc.on('get-path-data', () => {
-    readModifiedWeldingPathData();
-    ipc.send('get-path-data-reply', yScan.modifiedWeldingPathData);
+    var scan = yScan;
+    readModifiedWeldingPathData(scan);
+    ipc.send('get-path-data-reply', scan.modifiedWeldingPathData);
   });
   ipc.on('open-options-dialog', () => onOpenOptionsDialog());
   ipc.on('open-error-dialog', (event, arg) => onOpenErrorDialog(arg));
@@ -65,7 +68,7 @@ window.onload = function() {
   resetModificationButton.addEventListener('click', () => {
     openConfirmationDialog(
       'Все изменения будут потеряны. Продолжить?',
-      resetModifiedPathData
+      onResetModifiedPathData
     );
   });
 
@@ -88,8 +91,23 @@ window.onload = function() {
   yScan.badDotsCountLabel = document.getElementById('bad-dots-count-label');
   yScan.goodDotsCountLabel = document.getElementById('good-dots-count-label');
 
+  for(let scan of allScans) {
+    buildPathChart(scan);
+    buildPathTable(scan);
+  }
+  setChartState();
+
+  prepareDialogs();
+
+  window.addEventListener('resize', event => onResizeWindow(event));
+  onResizeWindow()
+}
+
+
+function buildPathChart(scan) {
   $.jqplot.config.enablePlugins = true;
-  yScan.pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
+
+  scan.pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
     {
       captureRightClick : true,
       seriesDefaults: {
@@ -191,32 +209,24 @@ window.onload = function() {
     }
   );
 
-  yScan.pathChart.series[0].plugins.draggable = undefined;
-  yScan.pathChart.series[1].plugins.draggable.constrainTo = 'y';
-  yScan.pathChart.series[2].plugins.draggable = undefined;
+  var series = scan.pathChart.series;
+  series[0].plugins.draggable = undefined;
+  series[1].plugins.draggable.constrainTo = 'y';
+  series[2].plugins.draggable = undefined;
 
-  $('#path-chart').on('jqplotDragStart', onDragStartPathChart);
-  $('#path-chart').on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
-  $('#path-chart').on('jqplotClick', onChartClick);
-  $('#path-chart').on('jqplotRightClick', onChartContextMenu);
+  var pathChartRef =   $('#path-chart');
 
-  yScan.pathChart.mx = {
+  pathChartRef.on('jqplotDragStart', onDragStartPathChart);
+  pathChartRef.on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
+  pathChartRef.on('jqplotClick', onChartClick);
+  pathChartRef.on('jqplotRightClick', onChartContextMenu);
+
+  scan.pathChart.mx = {
     options: {
-      draggablePlugin: yScan.pathChart.series[1].plugins.draggable,
-      zoomPlugin:      yScan.pathChart.plugins.cursor._zoom,
+      draggablePlugin: scan.pathChart.series[1].plugins.draggable,
+      zoomPlugin:      scan.pathChart.plugins.cursor._zoom,
     }
   }
-
-  setChartState();
-
-  for(let scan of allScans) {
-    buildPathTable(scan);
-  }
-
-  prepareDialogs();
-
-  window.addEventListener('resize', event => onResizeWindow(event));
-  onResizeWindow()
 }
 
 
@@ -326,11 +336,13 @@ function buildPathTable(scan) {
 
 function readPathFromSimatic() {
   ipc.on('read-path-reply', (event, arg) => {
-    yScan.originalWeldingPathData = arg;
-    filterPath(arg);
-    refreshWeldingPathTable(arg);
-    refreshPathChart(arg);
-    refreshDotsCountLabels(arg);
+    var scan = yScan;
+    scan.originalWeldingPathData = arg;
+    scan.modifiedWeldingPathData = arg;
+    filterPath(scan);
+    refreshWeldingPathTable(scan);
+    refreshPathChart(scan);
+    refreshDotsCountLabels(scan);
   });
 
   ipc.send('read-path', "");
@@ -384,13 +396,15 @@ function writePathToSimatic() {
   ipc.sendSync('set-global', {
     writePathType: (el.value == '1' ? 'before' : 'after'),
   });
-  readModifiedWeldingPathData();
-  filterPath(yScan.modifiedWeldingPathData);
-  ipc.send('write-path', yScan.modifiedWeldingPathData);
+  var scan = yScan;
+  readModifiedWeldingPathData(scan);
+  filterPath(scan);
+  ipc.send('write-path', scan.modifiedWeldingPathData);
 }
 
 
-function refreshWeldingPathTable(pathData) {
+function refreshWeldingPathTable(scan) {
+  var pathData = scan.modifiedWeldingPathData;
   var index = 0;
   var tableData = [];
   var kX = constants.kX;
@@ -405,15 +419,15 @@ function refreshWeldingPathTable(pathData) {
     });
     index++;
   }
-  yScan.pathTable.replaceData(tableData);
+  scan.pathTable.replaceData(tableData);
 }
 
 
-function readModifiedWeldingPathData() {
-  var data = yScan.pathTable.getData()
-  yScan.modifiedWeldingPathData = [];
+function readModifiedWeldingPathData(scan) {
+  var data = scan.pathTable.getData()
+  scan.modifiedWeldingPathData = [];
   for (item of data) {
-    yScan.modifiedWeldingPathData.push({
+    scan.modifiedWeldingPathData.push({
       y: item.y,
       status: (item.valid ? 1 : 0)
     });
@@ -421,22 +435,20 @@ function readModifiedWeldingPathData() {
 }
 
 
-function resetModifiedPathData() {
-  yScan.yOffset = 0;
-  var newModified = [];
-  for (var item of yScan.originalWeldingPathData) {
-    newModified.push( [].concat(item) );
-  }
-  yScan.modifiedWeldingPathData = yScan.originalWeldingPathData;
+function onResetModifiedPathData() {
+  var activeScan = getActiveScan();
+  activeScan.yOffset = 0;
+  activeScan.modifiedWeldingPathData = activeScan.originalWeldingPathData;
   new Promise(() => {
-    refreshPathChart(yScan.originalWeldingPathData);
-    refreshWeldingPathTable(yScan.originalWeldingPathData);
-    refreshDotsCountLabels(yScan.originalWeldingPathData);
+    refreshPathChart(activeScan);
+    refreshWeldingPathTable(activeScan);
+    refreshDotsCountLabels(activeScan);
   });
 }
 
 
-function refreshPathChart(weldingData, options) {
+function refreshPathChart(scan, options) {
+  var weldingData = scan.modifiedWeldingPathData;
   var originalData = [];
   var seriesData = [];
   var filteredData = [];
@@ -455,9 +467,9 @@ function refreshPathChart(weldingData, options) {
     }
   }
 
-  count = yScan.originalWeldingPathData.length;
+  count = scan.originalWeldingPathData.length;
   for(i = 0; i < count; i++) {
-    item = yScan.originalWeldingPathData[i];
+    item = scan.originalWeldingPathData[i];
     x = kX*i;
     if(item.status) {
       originalData.push( [x, item.y]);
@@ -465,20 +477,22 @@ function refreshPathChart(weldingData, options) {
   }
 
 
-  yScan.pathChart.series[0].data = originalData;
-  yScan.pathChart.series[1].data = seriesData;
-  yScan.pathChart.series[2].data = filteredData;
+  scan.pathChart.series[0].data = originalData;
+  scan.pathChart.series[1].data = seriesData;
+  scan.pathChart.series[2].data = filteredData;
 
   new Promise(() => {
     var resetAxes = true;
     if ( options && options.resetAxes !== undefined) {
       resetAxes = options.resetAxes;
     }
-    yScan.pathChart.replot( {resetAxes: resetAxes}  );
+    scan.pathChart.replot( {resetAxes: resetAxes}  );
   });
 }
 
-function filterPath(weldingData) {
+
+function filterPath(scan) {
+  var weldingData = scan.modifiedWeldingPathData;
   var arrIn = [];
   var arrStatus = [];
   for (var item of weldingData) {
@@ -498,7 +512,7 @@ function filterPath(weldingData) {
 
 
   var n = arrIn.length;
-  var offset = parseFloat(yScan.yOffset);
+  var offset = parseFloat(scan.yOffset);
   if ( isNaN(offset) ) {
     offset = 0;
   }
@@ -507,52 +521,58 @@ function filterPath(weldingData) {
   }
 }
 
+
 function onResizeWindow() {
-  yScan.pathChart.replot();
+  for(var scan of allScans) {
+    scan.pathChart.replot();
+  }
 }
 
 
 function resetZoom() {
+  var activeScan = getActiveScan();
   var activateZoom = false;
-  if ( !yScan.pathChart.plugins.cursor._zoom ) {
-    yScan.pathChart.plugins.cursor._zoom = yScan.pathChart.mx.options.zoomPlugin;
+  if ( !activeScan.pathChart.plugins.cursor._zoom ) {
+    activeScan.pathChart.plugins.cursor._zoom = activeScan.pathChart.mx.options.zoomPlugin;
     activateZoom = true;
   }
 
-  yScan.pathChart.resetZoom();
+  activeScan.pathChart.resetZoom();
 
   if ( activateZoom ) {
-    yScan.pathChart.plugins.cursor._zoom = undefined;
+    activeScan.pathChart.plugins.cursor._zoom = undefined;
   }
 
-  yScan.pathChart.replot ( { resetAxes: true} );
+  activeScan.pathChart.replot ( { resetAxes: true} );
 }
 
 
 function onDragStartPathChart(ev, seriesIndex, pointIndex) {
+  var activeScan = getActiveScan();
   draggedDotIndex = pointIndex;
-  dragStartY = yScan.pathChart.series[1].data[pointIndex][1];
+  dragStartY = activeScan.pathChart.series[1].data[pointIndex][1];
 }
 
 
 function onDragStopPathChart(dotChartIndex) {
-  var dot = yScan.pathChart.series[1].data[dotChartIndex];
+  var activeScan = getActiveScan();
+  var dot = activeScan.pathChart.series[1].data[dotChartIndex];
   var draggedX = dot[0];
   var draggedY = dot[1];
   var draggedDeltaY = draggedY - dragStartY;
   var draggedRegion = false;
-  var tableData = yScan.pathTable.getData();
+  var tableData = activeScan.pathTable.getData();
   var kX = 1; // constants.kX
   var dotTableIndex;
 
-  if(yScan.chartSelection.state == 'rect') {
-    draggedRegion = yScan.chartSelection.x0 <= draggedX &&
-                    yScan.chartSelection.x1 >= draggedX;
+  if(activeScan.chartSelection.state == 'rect') {
+    draggedRegion = activeScan.chartSelection.x0 <= draggedX &&
+                    activeScan.chartSelection.x1 >= draggedX;
   }
 
   if (draggedRegion) {
-    var x = yScan.chartSelection.x0;
-    var x1 = yScan.chartSelection.x1;
+    var x = activeScan.chartSelection.x0;
+    var x1 = activeScan.chartSelection.x1;
     dotTableIndex = Math.round(x/kX);
     while(x < x1) {
       if(tableData[dotTableIndex].valid) {
@@ -570,11 +590,11 @@ function onDragStopPathChart(dotChartIndex) {
   }
 
   new Promise(() => {
-    yScan.pathTable.replaceData(tableData);
-    readModifiedWeldingPathData();
-    filterPath(yScan.modifiedWeldingPathData);
-    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
-    refreshPathChart(yScan.modifiedWeldingPathData, {
+    activeScan.pathTable.replaceData(tableData);
+    readModifiedWeldingPathData(activeScan);
+    filterPath(activeScan);
+    refreshWeldingPathTable(activeScan);
+    refreshPathChart(activeScan, {
       resetAxes: false,
     });
   });
@@ -582,24 +602,26 @@ function onDragStopPathChart(dotChartIndex) {
 
 
 function onOpenDotsCountDialog() {
+  var activeScan = getActiveScan();
   var input = document.getElementById('dots-count-modal-input');
-  readModifiedWeldingPathData();
-  input.value = yScan.modifiedWeldingPathData.length;
+  readModifiedWeldingPathData(activeScan);
+  input.value = activeScan.modifiedWeldingPathData.length;
   $('#dots-count-modal-dialog').modal('show');
 }
 
 
 function onDotsCountDialogOkClick() {
+  var activeScan = getActiveScan();
   var input = document.getElementById('dots-count-modal-input');
   var newSize = parseInt(input.value);
   if ( !isNaN(newSize) && newSize >= 0 ) {
     if ( newSize > constants.dotsCountMax ) {
       newSize = constants.dotsCountMax;
     }
-    if ( newSize != yScan.modifiedWeldingPathData.length ) {
-      yScan.allDotsCountLabel.textContent = newSize;
+    if ( newSize != activeScan.modifiedWeldingPathData.length ) {
+      activeScan.allDotsCountLabel.textContent = newSize;
       new Promise(() => {
-        resizeWeldingData(newSize);
+        resizeWeldingData(activeScan, newSize);
       });
     }
   }
@@ -610,38 +632,40 @@ function onDotsCountDialogOkClick() {
 function onPathTableDataEdited(data) {
   var activeScan = getActiveScan();
   new Promise(() => {
-    readModifiedWeldingPathData();
-    filterPath(activeScan.modifiedWeldingPathData);
-    refreshPathChart(activeScan.modifiedWeldingPathData, { resetAxes: false });
-    refreshWeldingPathTable(activeScan.modifiedWeldingPathData);
-    refreshDotsCountLabels(activeScan.modifiedWeldingPathData);
+    readModifiedWeldingPathData(activeScan);
+    filterPath(activeScan);
+    refreshPathChart(activeScan, { resetAxes: false });
+    refreshWeldingPathTable(activeScan);
+    refreshDotsCountLabels(activeScan);
   });
 }
 
-function resizeWeldingData(newSize) {
-  if ( newSize < yScan.modifiedWeldingPathData.length ) {
-    while ( newSize < yScan.modifiedWeldingPathData.length ) {
-      yScan.modifiedWeldingPathData.pop();
+
+function resizeWeldingData(scan, newSize) {
+  if ( newSize < scan.modifiedWeldingPathData.length ) {
+    while ( newSize < scan.modifiedWeldingPathData.length ) {
+      scan.modifiedWeldingPathData.pop();
     }
   }
   else {
-    while ( yScan.modifiedWeldingPathData.length < newSize ) {
-      yScan.modifiedWeldingPathData.push({
+    while ( scan.modifiedWeldingPathData.length < newSize ) {
+      scan.modifiedWeldingPathData.push({
         y: 0.0,
         status: 1
       });
     }
   }
 
-  filterPath(yScan.modifiedWeldingPathData);
-  refreshWeldingPathTable(yScan.modifiedWeldingPathData);
-  refreshPathChart(yScan.modifiedWeldingPathData);
-  refreshDotsCountLabels(yScan.modifiedWeldingPathData);
+  filterPath(scan);
+  refreshWeldingPathTable(scan);
+  refreshPathChart(scan);
+  refreshDotsCountLabels(scan);
 }
 
 
-function refreshDotsCountLabels(data) {
-  allDotsCountLabel.textContent = data.length;
+function refreshDotsCountLabels(scan) {
+  var data = scan.modifiedWeldingPathData;
+  scan.allDotsCountLabel.textContent = data.length;
 
   var goodDots = 0;
   for (var item of data) {
@@ -649,10 +673,10 @@ function refreshDotsCountLabels(data) {
       goodDots++;
     }
   }
-  yScan.goodDotsCountLabel.textContent = goodDots;
+  scan.goodDotsCountLabel.textContent = goodDots;
 
   var badDots = data.length - goodDots;
-  yScan.badDotsCountLabel.textContent = badDots;
+  scan.badDotsCountLabel.textContent = badDots;
 }
 
 
@@ -763,10 +787,10 @@ function onYOffsetDialogOkClick() {
   activeScan.yOffset = input.value;
   $('#y-offset-modal-dialog').modal('hide');
   new Promise(() => {
-    readModifiedWeldingPathData();
-    filterPath(activeScan.modifiedWeldingPathData);
-    refreshWeldingPathTable(activeScan.modifiedWeldingPathData);
-    refreshPathChart(activeScan.modifiedWeldingPathData, {
+    readModifiedWeldingPathData(activeScan);
+    filterPath(activeScan);
+    refreshWeldingPathTable(activeScan);
+    refreshPathChart(activeScan, {
       resetAxes: false,
     });
   });
@@ -866,7 +890,7 @@ function onClearSelectionButtonClick() {
 
 function onSetStatusClick() {
   var activeScan = getActiveScan();
-  refreshAll(function() {
+  refreshAll(activeScan, function() {
     let allRows = activeScan.pathTable.getSelectedRows();
     for(let row of allRows) {
       var index = row.getPosition();
@@ -878,7 +902,7 @@ function onSetStatusClick() {
 
 function onSetStatusForAllClick() {
   var activeScan = getActiveScan();
-  refreshAll(function() {
+  refreshAll(activeScan, function() {
     for(let item of activeScan.modifiedWeldingPathData) {
       item.status = 1;
     }
@@ -888,7 +912,7 @@ function onSetStatusForAllClick() {
 
 function onClearStatusClick() {
   var activeScan = getActiveScan();
-  refreshAll(function() {
+  refreshAll(activeScan, function() {
     let allRows = activeScan.pathTable.getSelectedRows();
     for(let row of allRows) {
       var index = row.getPosition();
@@ -904,16 +928,16 @@ function onClearRowsSelectionClick() {
 }
 
 
-function refreshAll(cb) {
+function refreshAll(scan, cb) {
   new Promise(() => {
-    readModifiedWeldingPathData();
+    readModifiedWeldingPathData(scan);
     if (cb) {
       cb();
     }
-    filterPath(yScan.modifiedWeldingPathData);
-    refreshPathChart(yScan.modifiedWeldingPathData);
-    refreshWeldingPathTable(yScan.modifiedWeldingPathData);
-    refreshDotsCountLabels(yScan.modifiedWeldingPathData);
+    filterPath(scan);
+    refreshPathChart(scan);
+    refreshWeldingPathTable(scan);
+    refreshDotsCountLabels(scan);
   });
 }
 
@@ -966,7 +990,7 @@ function onSetStatusInRangeDialogOkClick(status) {
     if (fromIndex < 0) {
       fromIndex = 0;
     }
-    refreshAll(function() {
+    refreshAll(activeScan, function() {
       if (toIndex >= activeScan.modifiedWeldingPathData.length) {
         toIndex = activeScan.modifiedWeldingPathData.length - 1;
       }
@@ -1070,10 +1094,10 @@ function onChartSelectionYMoveDialogOkClick() {
 
   new Promise(() => {
     activeScan.pathTable.replaceData(tableData);
-    readModifiedWeldingPathData();
-    filterPath(activeScan.modifiedWeldingPathData);
-    refreshWeldingPathTable(activeScan.modifiedWeldingPathData);
-    refreshPathChart(activeScan.modifiedWeldingPathData, {
+    readModifiedWeldingPathData(activeScan);
+    filterPath(activeScan);
+    refreshWeldingPathTable(activeScan);
+    refreshPathChart(activeScan, {
       resetAxes: false,
     });
   });
