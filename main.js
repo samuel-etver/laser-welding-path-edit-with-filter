@@ -22,6 +22,7 @@ const configFileName = constants.appName + '.config';
 var globalVars = {
   controllerIp: '',
   yScan: {
+    name: 'yScan',
     blockNumber: '',
     yArrayAddress: '',
     yStatusArrayAddress: '',
@@ -36,6 +37,7 @@ var globalVars = {
   writePathType: '',
   debug: false,
 };
+
 const configVars = [
   'controllerIp',
   'yScan.blockNumber',
@@ -55,8 +57,12 @@ const deprecatedConfigVars = [
   'numberOfDotsAddress',
 ];
 var yScan = {
+  name: 'yScan',
   weldingPathData: []
 };
+var allScans = [
+  yScan
+];
 
 var simaticConn;
 var simaticVars = {
@@ -173,24 +179,36 @@ function checkSimaticAddresses() {
   var selectText = txt => {
       return '<span style="background:pink">"' + txt + '"</span>';
   }
-  
-  if ( !checkNumber(getGlobalVar('yScan.blockNumber'))) {
-      showError('Ошибка в номере блока: ' + selectText(getGlobalVar('yScan.blockNumber')) + '.');
-  }
-  else if ( !checkNumber(getGlobalVar('yScan.numberOfDotsAddress')) ) {
-      showError('Ошибка в адресе<br><b>"Количество точек"</b>: ' + selectText(getGlobalVar('yScan.numberOfDotsAddress')) + '.');
-  }
-  else if ( !checkNumber(getGlobalVar('yScan.yArrayAddress')) ) {
-      showError('Ошибка в адресе массива<br><b>"Точки"</b>: ' + selectText(getGlobalVar('yScan.yArrayAddress')) + '.');
-  }
-  else if ( !checkNumber(getGlobalVar('yScan.yStatusArrayAddress')) ) {
-      showError('Ошибка в адресе массива<br><b>"Статусы точек"</b>: ' + selectText(getGlobalVar('yScan.yStatusArrayAddress')) + '.');
-  }
-  else {
-      return true;
+  var showErrorOfVar = (msg, varName) => {
+    showError(msg + selectText(getGlobalVar(varName)) + '.');
   }
 
-  return false;
+  var checkScanVars = function(scan) {
+    let prefix = scan.name + '.';
+
+    if ( !checkNumber(getGlobalVar(prefix + 'blockNumber'))) {
+      return () => showErrorOfVar('Ошибка в номере блока: ', prefix + 'blockNumber');
+    }
+    else if ( !checkNumber(getGlobalVar(prefix + 'numberOfDotsAddress')) ) {
+      return () => showErrorOfVar('Ошибка в адресе<br><b>"Количество точек"</b>: ', prefix + 'numberOfDotsAddress');
+    }
+    else if ( !checkNumber(getGlobalVar(prefix + 'yArrayAddress')) ) {
+      return () => showErrorOfVar('Ошибка в адресе массива<br><b>"Точки"</b>: ', prefix + 'yArrayAddress');
+    }
+    else if ( !checkNumber(getGlobalVar(prefix + 'yStatusArrayAddress')) ) {
+      return () => showErrorOfVar('Ошибка в адресе массива<br><b>"Статусы точек"</b>: ', prefix + 'yStatusArrayAddress');
+    }
+  }
+
+  for (let scan of allScans) {
+    let result = checkScanVars(scan);
+    if (result) {
+      result();
+      return false;
+    }
+  }
+
+  return true;
 }
 
 
@@ -433,18 +451,18 @@ function loadConfig() {
   let configFilePath = path.join(getGlobalVar('homeDir'), configFileName);
   let cfg = new config();
   cfg.load(configFilePath);
-  for (key of configVars) {
+  for (let key of configVars) {
     setGlobalVar(key, cfg.get(key)||'');
   }
 
-  for (key of deprecatedConfigVars) {
+  for (let key of deprecatedConfigVars) {
     setGlobalVar('yScan.' + key, getGlobalVar(key));
   }
 }
 
 
 function saveConfig() {
-  for (key of deprecatedConfigVars) {
+  for (let key of deprecatedConfigVars) {
     setGlobalVar(key, getGlobalVar('yScan.' + key));
   }
 

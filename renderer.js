@@ -55,9 +55,6 @@ window.onload = function() {
   ipc.on('open-error-dialog', (event, arg) => onOpenErrorDialog(arg));
   ipc.on('open-write-success-dialog', () => onOpenWriteSuccessDialog());
 
-  var yOffsetButton = document.getElementById('y-offset-button');
-  yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
-
   readButton = document.getElementById('read-button');
   readButton.addEventListener('click', readPathFromSimatic);
 
@@ -78,20 +75,26 @@ window.onload = function() {
   var exitButton = document.getElementById('exit-button');
   exitButton.addEventListener('click', () => window.close());
 
-  var zoomButton = document.getElementById('zoom-button');
-  zoomButton.addEventListener('click', onChartButtonClick);
-
-  var dragButton = document.getElementById('drag-button');
-  dragButton.addEventListener('click', onChartButtonClick);
-
-  var clearSelectionButton = document.getElementById("clear-selection-button");
-  clearSelectionButton.addEventListener('click', onClearSelectionButtonClick);
-
-  yScan.allDotsCountLabel = document.getElementById('all-dots-count-label');
-  yScan.badDotsCountLabel = document.getElementById('bad-dots-count-label');
-  yScan.goodDotsCountLabel = document.getElementById('good-dots-count-label');
 
   for(let scan of allScans) {
+    let prefix = scan.name.toLowerCase() + '-';
+
+    let yOffsetButton = document.getElementById(prefix + 'y-offset-button');
+    yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
+
+    let zoomButton = document.getElementById(prefix + 'zoom-button');
+    zoomButton.addEventListener('click', onChartButtonClick);
+
+    let dragButton = document.getElementById(prefix + 'drag-button');
+    dragButton.addEventListener('click', onChartButtonClick);
+
+    let clearSelectionButton = document.getElementById(prefix + "clear-selection-button");
+    clearSelectionButton.addEventListener('click', onClearSelectionButtonClick);
+
+    scan.allDotsCountLabel = document.getElementById(prefix + 'all-dots-count-label');
+    scan.badDotsCountLabel = document.getElementById(prefix + 'bad-dots-count-label');
+    scan.goodDotsCountLabel = document.getElementById(prefix + 'good-dots-count-label');
+
     buildPathChart(scan);
     buildPathTable(scan);
   }
@@ -105,9 +108,11 @@ window.onload = function() {
 
 
 function buildPathChart(scan) {
+  let prefix = scan.name.toLowerCase() + '-';
+
   $.jqplot.config.enablePlugins = true;
 
-  scan.pathChart = $.jqplot('path-chart',  [ [,], [,], [,] ],
+  scan.pathChart = $.jqplot(prefix + 'path-chart',  [ [,], [,], [,] ],
     {
       captureRightClick : true,
       seriesDefaults: {
@@ -214,7 +219,7 @@ function buildPathChart(scan) {
   series[1].plugins.draggable.constrainTo = 'y';
   series[2].plugins.draggable = undefined;
 
-  var pathChartRef =   $('#path-chart');
+  var pathChartRef =   $('#' + prefix + 'path-chart');
 
   pathChartRef.on('jqplotDragStart', onDragStartPathChart);
   pathChartRef.on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });

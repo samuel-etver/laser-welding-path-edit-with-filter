@@ -32,28 +32,28 @@
     </div>
 
     <div class="data-space-class">
-      <div class="chart-space-class" id="chart-space">
-        <div id="chart-buttons-panel">
-          <button id="y-offset-button" class="chart-button-class" tabindex="-1">
+      <div class="chart-space-class">
+        <div class="chart-buttons-panel-class">
+          <button id="yscan-y-offset-button" class="chart-button-class" tabindex="-1">
               <img src="./Images/up-down.png" class="chart-button-image-class"></img>
           </button>
-          <label id="zoom-button" class="chart-radio-class" tabindex="-1">
+          <label id="yscan-zoom-button" class="chart-radio-class" tabindex="-1">
             <input type="radio" name="chart-buttons-group" id="chart-zoom-state" checked="checked">
             <img src="./Images/zoom-in.png" class="chart-radio-image-class"></img>
           </label>
-          <label id="drag-button" class="chart-radio-class" tabindex="-1">
+          <label id="yscan-drag-button" class="chart-radio-class" tabindex="-1">
             <input type="radio" name="chart-buttons-group" id="chart-drag-state">
             <img src="./Images/drag.png" class="chart-radio-image-class"></img>
           </label>
-          <button id="clear-selection-button" class="chart-button-class" tabindex="-1">
+          <button id="yscan-clear-selection-button" class="chart-button-class" tabindex="-1">
               <img src="./Images/clear-selection.png" class="chart-button-image-class"></img>
           </button>
         </div>
-        <div class="path-chart-class" id="path-chart"></div>
+        <div class="path-chart-class" id="yscan-path-chart"></div>
       </div>
 
-      <div class="table-space-class" id="table-space">
-        <div class="dots-count-table-container-class" id="dots-count-table-container">
+      <div class="table-space-class">
+        <div class="dots-count-table-container-class">
           <table class="table table-sm table-info" style="margin: 0; border-radius: 0.8rem;">
             <thead>
               <tr>
@@ -63,17 +63,17 @@
             <tbody>
               <tr>
                 <td>Всего</td>
-                <td><label id="all-dots-count-label">0</label></td>
+                <td><label id="yscan-all-dots-count-label">0</label></td>
                 <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" tabindex="-1" onclick="onOpenDotsCountDialog()">...</button></td>
               </tr>
               <tr>
                 <td>Хорошие</td>
-                <td><label id="good-dots-count-label">0</label></td>
+                <td><label id="yscan-good-dots-count-label">0</label></td>
                 <td></td>
               </tr>
               <tr>
                 <td>Плохие</td>
-                <td><label id="bad-dots-count-label">0</label></td>
+                <td><label id="yscan-bad-dots-count-label">0</label></td>
                 <td></td>
               </tr>
             </tbody>
