@@ -1,3 +1,7 @@
+:root {
+    --scan-tabs-height: 40px;
+}
+
 body {
     overflow-x: hidden;
     overflow-y: hidden;
@@ -5,6 +9,33 @@ body {
     flex-direction: column;
     height: calc(100vh - 8px);
     margin: 0px 8px;
+}
+
+#scan-tabs {
+    width: 100vw;
+    padding:2px;
+    margin:2px;
+    height: calc(100%);
+    min-width: 100%;
+}
+
+#scan-tabs > ul {
+    max-height: var(--scan-tabs-height);
+    border-bottom: none;
+}
+
+.scan-tabs-content-class {
+  height: calc(100% - var(--scan-tabs-height));
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#yscan-tab {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .data-space-class {

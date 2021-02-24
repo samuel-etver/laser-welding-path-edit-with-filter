@@ -17,7 +17,7 @@ const constants = require('./constants.js');
 var mainWindow;
 var aboutDialog;
 
-const configFileName = constants.appName + '.config';
+const configFileName = constants.appName + '2.config';
 
 var globalVars = {
   controllerIp: '',
@@ -28,15 +28,14 @@ var globalVars = {
     yStatusArrayAddress: '',
     numberOfDotsAddress: '',
   },
-  blockNumber: '',
-  yArrayAddress: '',
-  yStatusArrayAddress: '',
-  numberOfDotsAddress: '',
   userPath: '',
   homeDir: path.join(process.env.APPDATA, constants.appName),
   writePathType: '',
   debug: false,
 };
+globalVars.zScan = Object.assign({}, globalVars.yScan);
+globalVars.zScan.name = globalVars.yScan.name;
+
 
 const configVars = [
   'controllerIp',
@@ -44,17 +43,11 @@ const configVars = [
   'yScan.yArrayAddress',
   'yScan.yStatusArrayAddress',
   'yScan.numberOfDotsAddress',
-  'blockNumber',
-  'yArrayAddress',
-  'yStatusArrayAddress',
-  'numberOfDotsAddress',
+  'zScan.blockNumber',
+  'zScan.yArrayAddress',
+  'zScan.yStatusArrayAddress',
+  'zScan.numberOfDotsAddress',
   'userPath',
-];
-const deprecatedConfigVars = [
-  'blockNumber',
-  'yArrayAddress',
-  'yStatusArrayAddress',
-  'numberOfDotsAddress',
 ];
 var yScan = {
   name: 'yScan',
@@ -454,18 +447,10 @@ function loadConfig() {
   for (let key of configVars) {
     setGlobalVar(key, cfg.get(key)||'');
   }
-
-  for (let key of deprecatedConfigVars) {
-    setGlobalVar('yScan.' + key, getGlobalVar(key));
-  }
 }
 
 
 function saveConfig() {
-  for (let key of deprecatedConfigVars) {
-    setGlobalVar(key, getGlobalVar('yScan.' + key));
-  }
-
   let configFolder = getGlobalVar('homeDir');
   if ( !fs.existsSync(configFolder) ) {
     fs.mkdirSync(configFolder, {recursive: true});

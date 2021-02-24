@@ -28,8 +28,15 @@ var yScan = {
     toIndex: null
   }
 };
+var zScan = Object.assign({}, yScan);
+for (let fieldName of ['chartSelection', 'tableSelection']) {
+  zScan[fieldName] = Object.assign({}, yScan[fieldName]);
+}
+zScan.name = 'zScan';
+
 var allScans = [
-  yScan
+  yScan,
+  zScan
 ];
 var draggedDotIndex;
 var ctrlKey;
@@ -78,6 +85,9 @@ window.onload = function() {
 
   for(let scan of allScans) {
     let prefix = scan.name.toLowerCase() + '-';
+    if (prefix == 'zscan-') {
+      break;
+    }
 
     let yOffsetButton = document.getElementById(prefix + 'y-offset-button');
     yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
@@ -704,36 +714,51 @@ function onOpenOptionsDialog() {
   var ipInput = document.getElementById('ip-input');
   ipInput.value = globalVars.controllerIp;
 
-  var blockNumberInput = document.getElementById('block-number-input');
-  blockNumberInput.value = globalVars['yScan.blockNumber'];
+  for (let scan of allScans) {
+    let name = scan.name;
+    let prefix = name.toLowerCase() + '-';
 
-  var yArrayAddressInput = document.getElementById('y-array-address-input');
-  yArrayAddressInput.value = globalVars['yScan.yArrayAddress'];
+    var blockNumberInput = document.getElementById(prefix + 'block-number-input');
+    blockNumberInput.value = globalVars[name + '.blockNumber'];
 
-  var yStatusArrayAddressInput = document.getElementById('y-status-array-address-input');
-  yStatusArrayAddressInput.value = globalVars['yScan.yStatusArrayAddress'];
+    var yArrayAddressInput = document.getElementById(prefix + 'y-array-address-input');
+    yArrayAddressInput.value = globalVars[name + '.yArrayAddress'];
 
-  var numberOfDotsAddressInput = document.getElementById('number-of-dots-address-input');
-  numberOfDotsAddressInput.value = globalVars['yScan.numberOfDotsAddress'];
+    var yStatusArrayAddressInput = document.getElementById(prefix + 'y-status-array-address-input');
+    yStatusArrayAddressInput.value = globalVars[name + '.yStatusArrayAddress'];
+
+    var numberOfDotsAddressInput = document.getElementById(prefix + 'number-of-dots-address-input');
+    numberOfDotsAddressInput.value = globalVars[name + '.numberOfDotsAddress'];
+  }
 
   $('#options-modal-dialog').modal('show');
 }
 
 
 function onOptionsDialogOkClick() {
-  var ipInput = document.getElementById('ip-input');
-  var blockNumberInput = document.getElementById('block-number-input');
-  var yArrayAddressInput = document.getElementById('y-array-address-input');
-  var yStatusArrayAddressInput = document.getElementById('y-status-array-address-input');
-  var numberOfDotsAddressInput = document.getElementById('number-of-dots-address-input');
+  var values = {};
 
-  ipc.sendSync('set-global', {
-    controllerIp: ipInput.value,
-    'yScan.blockNumber':  blockNumberInput.value,
-    'yScan.yArrayAddress':       yArrayAddressInput.value,
-    'yScan.yStatusArrayAddress': yStatusArrayAddressInput.value,
-    'yScan.numberOfDotsAddress': numberOfDotsAddressInput.value,
-  });
+  var ipInput = document.getElementById('ip-input');
+  values['controllerIp'] = ipInput.value;
+
+  for (let scan of allScans) {
+    let name = scan.name;
+    let prefix = name.toLowerCase() + '-';
+
+    var blockNumberInput = document.getElementById(prefix + 'block-number-input');
+    values[name + '.blockNumber'] = blockNumberInput.value;
+
+    var yArrayAddressInput = document.getElementById(prefix + 'y-array-address-input');
+    values[name + '.yArrayAddress'] = yArrayAddressInput.value;
+
+    var yStatusArrayAddressInput = document.getElementById(prefix + 'y-status-array-address-input');
+    values[name + '.yStatusArrayAddress'] = yStatusArrayAddressInput.value;
+
+    var numberOfDotsAddressInput = document.getElementById(prefix + 'number-of-dots-address-input');
+    values[name + '.numberOfDotsAddress'] = numberOfDotsAddressInput.value;
+  }
+
+  ipc.sendSync('set-global', values);
 
   $('#options-modal-dialog').modal('hide');
 }
