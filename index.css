@@ -13,8 +13,8 @@ body {
 
 #scan-tabs {
     width: 100vw;
-    padding:2px;
-    margin:2px;
+    padding:0px;
+    margin:0px;
     height: calc(100%);
     min-width: 100%;
 }
