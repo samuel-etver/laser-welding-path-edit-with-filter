@@ -9,19 +9,36 @@ body {
     flex-direction: column;
     height: calc(100vh - 8px);
     margin: 0px 8px;
+    user-select: none;
 }
 
 #scan-tabs {
     width: 100vw;
-    padding:0px;
-    margin:0px;
-    height: calc(100%);
+    padding:0;
+    margin: 0;
+    height: 100%;
     min-width: 100%;
 }
 
 #scan-tabs > ul {
     max-height: var(--scan-tabs-height);
     border-bottom: none;
+}
+
+#scan-tabs .nav-link {
+  font-style: italic;
+  font-weight: normal;
+  background-color: white;
+  color: grey;
+}
+
+#scan-tabs .nav-link.active {
+  color: white;
+  background-image: linear-gradient(to bottom, #000 50%, #555 80%, #fff);
+  font-style: normal;
+  font-weight: bold;
+  letter-spacing: 3px;
+  border-style: none;
 }
 
 .scan-tabs-content-class {

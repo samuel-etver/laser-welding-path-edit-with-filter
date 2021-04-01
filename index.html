@@ -23,7 +23,7 @@
       <a class="dropdown-item" href="#" onclick="onChartSelectionYMoveClick();">Сместить группу по оси Y ...</a>
     </div>
 
-    <div style="margin-top:8px; margin-bottom: 8px; white-space:nowrap;">
+    <div style="margin-top:4px; margin-bottom: 0px; white-space:nowrap;">
       <button class="btn btn-primary" id="read-button" tabindex="-1">Считать</button>
       <button class="btn btn-primary ml-2" id="write-button" tabindex="-1">Записать</button>
       <button class="btn btn-secondary ml-2" id="reset-modification-button" tabindex="-1">Отмена изменений</button>
@@ -148,10 +148,10 @@
               <div class="container mt-3" id="options-tabs" style="margin:2px; padding:2px 4px">
               <ul class="nav nav-tabs">
                 <li class="nav-item">
-                  <a class="nav-link active" data-toggle="tab" href="#options-tab-y">Y</a>
+                  <a class="nav-link active" data-toggle="tab" href="#options-tab-y">Y-СКАН</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link"  data-toggle="tab" href="#options-tab-z">Z</a>
+                  <a class="nav-link"  data-toggle="tab" href="#options-tab-z">Z-СКАН</a>
                 </li>
               </ul>
 
@@ -338,6 +338,18 @@
                 <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-ip"></span></td>
               </tr>
               <tr class="bottom-bordered">
+                <td>Скан</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2">
+                  <div class="input-group input-group-sm">
+                    <select class="custom-select btn-sm focusable" id="mwrite-confirmation-modal-dialog-path-select">
+                      <option selected value="1">Y-СКАН</option>
+                      <option          value="2">Z-СКАН</option>
+                      <option          value="3">YZ-СКАНЫ</option>
+                    </select>
+                  </div>
+                </td>
+              </tr>
+              <tr class="bottom-bordered">
                 <td>Данные:</td>
                 <td class="write-confirmation-modal-dialog-values-table-column2">
                   <div class="input-group input-group-sm">
@@ -347,6 +359,10 @@
                     </select>
                   </div>
                 </td>
+              </tr>
+
+              <tr class="bottom-bordered">
+                <td><b>Y-СКАН</b></td>
               </tr>
               <tr class="bottom-bordered">
                 <td>Блок данных:</td>
@@ -364,6 +380,27 @@
                 <td>Адрес массива статусов точек:</td>
                 <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-y-status-array-address"></span></td>
               </tr>
+
+              <tr class="bottom-bordered">
+                <td><b>Z-СКАН</b></td>
+              </tr>
+              <tr class="bottom-bordered">
+                <td>Блок данных:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-block-number"></span></td>
+              </tr>
+              <tr class="bottom-bordered">
+                <td>Адрес количества точек:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-number-of-dots-address"></span></td>
+              </tr>
+              <tr class="bottom-bordered">
+                <td>Адрес массива точек:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-y-array-address"></span></td>
+              </tr>
+              <tr>
+                <td>Адрес массива статусов точек:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-y-status-array-address"></span></td>
+              </tr>
+
             </table>
           </div>
 
