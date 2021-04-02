@@ -341,7 +341,7 @@
                 <td>Скан</td>
                 <td class="write-confirmation-modal-dialog-values-table-column2">
                   <div class="input-group input-group-sm">
-                    <select class="custom-select btn-sm focusable" id="mwrite-confirmation-modal-dialog-path-select">
+                    <select class="custom-select btn-sm focusable first-focus" id="write-confirmation-modal-dialog-scan-select">
                       <option selected value="1">Y-СКАН</option>
                       <option          value="2">Z-СКАН</option>
                       <option          value="3">YZ-СКАНЫ</option>
@@ -349,56 +349,67 @@
                   </div>
                 </td>
               </tr>
-              <tr class="bottom-bordered">
+
+              <tr class="bottom-bold-bordered" id="write-confirmation-modal-dialog-row-yscan-title">
+                <td colspan="2"><b>Y-СКАН</b></td>
+              </tr>
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-yscan-path-select">
                 <td>Данные:</td>
                 <td class="write-confirmation-modal-dialog-values-table-column2">
                   <div class="input-group input-group-sm">
-                    <select class="custom-select btn-sm first-focus focusable" id="write-confirmation-modal-dialog-path-select">
+                    <select class="custom-select btn-sm focusable" id="write-confirmation-modal-dialog-yscan-path-select">
                       <option selected value="1">До фильтра</option>
                       <option          value="2">После фильтра</option>
                     </select>
                   </div>
                 </td>
               </tr>
-
-              <tr class="bottom-bordered">
-                <td><b>Y-СКАН</b></td>
-              </tr>
-              <tr class="bottom-bordered">
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-yscan-block-number">
                 <td>Блок данных:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-block-number"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-yscan-block-number"></span></td>
               </tr>
-              <tr class="bottom-bordered">
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-yscan-number-of-dots-address">
                 <td>Адрес количества точек:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-number-of-dots-address"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-yscan-number-of-dots-address"></span></td>
               </tr>
-              <tr class="bottom-bordered">
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-yscan-y-array-address">
                 <td>Адрес массива точек:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-y-array-address"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-yscan-y-array-address"></span></td>
               </tr>
-              <tr>
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-yscan-y-status-array-address">
                 <td>Адрес массива статусов точек:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-y-status-array-address"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-yscan-y-status-array-address"></span></td>
               </tr>
 
-              <tr class="bottom-bordered">
-                <td><b>Z-СКАН</b></td>
+              <tr class="bottom-bold-bordered" id="write-confirmation-modal-dialog-row-zscan-title">
+                <td colspan="2"><b>Z-СКАН</b></td>
               </tr>
-              <tr class="bottom-bordered">
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-zscan-path-select">
+                <td>Данные:</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2">
+                  <div class="input-group input-group-sm">
+                    <select class="custom-select btn-sm first-focus focusable" id="mwrite-confirmation-modal-dialog-zscan-path-select">
+                      <option selected value="1">До фильтра</option>
+                      <option          value="2">После фильтра</option>
+                    </select>
+                  </div>
+                </td>
+              </tr>
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-zscan-block-number">
                 <td>Блок данных:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-block-number"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-zscan-block-number"></span></td>
               </tr>
-              <tr class="bottom-bordered">
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-zscan-number-of-dots-address">
                 <td>Адрес количества точек:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-number-of-dots-address"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-zscan-number-of-dots-address"></span></td>
               </tr>
-              <tr class="bottom-bordered">
+              <tr class="bottom-bordered" id="write-confirmation-modal-dialog-row-zscan-y-array-address">
                 <td>Адрес массива точек:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-y-array-address"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-zscan-y-array-address"></span></td>
               </tr>
-              <tr>
+              <tr id="write-confirmation-modal-dialog-row-zscan-y-status-array-address">
                 <td>Адрес массива статусов точек:</td>
-                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="mwrite-confirmation-modal-dialog-y-status-array-address"></span></td>
+                <td class="write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-zscan-y-status-array-address"></span></td>
               </tr>
 
             </table>

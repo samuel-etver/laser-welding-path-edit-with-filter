@@ -379,35 +379,46 @@ window.onkeyup = function(event) {
 
 
 function onWriteButtonClick() {
-  var globalVars = ipc.sendSync('get-global', [
-    'controllerIp',
-    'yScan.blockNumber',
-    'yScan.yArrayAddress',
-    'yScan.yStatusArrayAddress',
-    'yScan.numberOfDotsAddress'
-  ]);
+  var globalVarNames = [
+    'controllerIp'
+  ];
+  for (let scan of allScans) {
+    let prefix = scan.name + '.';
+    globalVarNames.push(
+      prefix + 'blockNumber',
+      prefix + 'yArrayAddress',
+      prefix + 'yStatusArrayAddress',
+      prefix + 'numberOfDotsAddress'
+    );
+  }
+  var globalVars = ipc.sendSync('get-global', globalVarNames);
+
 
   var idPrefix = 'write-confirmation-modal-dialog-';
-  var setVar = function(name, value, valuePrefix) {
-    var el = document.getElementById(idPrefix + name);
+  var setVar = function(scanName, name, value, valuePrefix) {
+    var elName = idPrefix + (scanName ? scanName.toLowerCase() + '-' : '') + name;
+    var el = document.getElementById(elName);
     el.innerHTML =
       '<b>' +
       (value ? (valuePrefix ? valuePrefix : '') + value : '?') +
       '</b>';
   };
 
-  setVar('ip', globalVars.controllerIp);
-  setVar('block-number', globalVars['yScan.blockNumber'], 'DB');
-  setVar('number-of-dots-address', globalVars['yScan.numberOfDotsAddress']);
-  setVar('y-array-address', globalVars['yScan.yArrayAddress']);
-  setVar('y-status-array-address', globalVars['yScan.yStatusArrayAddress']);
+  setVar(undefined, 'ip', globalVars.controllerIp);
+  for (let scan of allScans) {
+    var scanName = scan.name;
+    setVar(scanName, 'block-number', globalVars[scanName + '.blockNumber'], 'DB');
+    setVar(scanName, 'number-of-dots-address', globalVars[scanName + '.numberOfDotsAddress']);
+    setVar(scanName, 'y-array-address', globalVars[scanName + '.yArrayAddress']);
+    setVar(scanName, 'y-status-array-address', globalVars[scanName + '.yStatusArrayAddress']);
+  }
 
   $('#write-confirmation-modal-dialog').modal('show');
 }
 
 
-function writePathToSimatic() {
-  var el = document.getElementById('write-confirmation-modal-dialog-path-select');
+function writePathToSimatic() {  
+  var el = document.getElementById('write-confirmation-modal-dialog-yscan-path-select');
   ipc.sendSync('set-global', {
     writePathType: (el.value == '1' ? 'before' : 'after'),
   });
@@ -894,6 +905,43 @@ function prepareDialogs() {
           }
         }
       });
+    }
+  }
+
+  let el = document.getElementById('write-confirmation-modal-dialog-scan-select');
+  el.addEventListener('change', () => onWriteConfirmationModalDialogScanSelect(el));
+}
+
+
+function onWriteConfirmationModalDialogScanSelect(el) {
+  var visible = {};
+  switch (el.value) {
+    case '1':
+      visible['yScan'] = true;
+      break;
+    case '2':
+      visible['zScan'] = true;
+      break;
+    default:
+      visible['yScan'] = true;
+      visible['zScan'] = true;
+  }
+
+  var elNames = [
+    'title',
+    'path-select',
+    'block-number',
+    'number-of-dots-address',
+    'y-array-address',
+    'y-status-array-address'
+  ];
+
+  for (var scan of allScans) {
+    var scanName = scan.name;
+    var hidden = !visible[scanName];
+    var prefix = 'write-confirmation-modal-dialog-row-' + scanName.toLowerCase() + '-';
+    for (var name of elNames) {
+      document.getElementById(prefix + name).hidden = hidden;
     }
   }
 }

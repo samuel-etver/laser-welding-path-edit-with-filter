@@ -254,7 +254,11 @@ body {
 }
 
 .bottom-bordered {
-  border-bottom: 1px solid #dddddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.bottom-bold-bordered {
+  border-bottom: 2px solid #000;
 }
 
 .write-confirmation-modal-dialog-values-table-column2 {
