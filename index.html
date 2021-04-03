@@ -39,6 +39,9 @@
         <li class="nav-item">
           <a class="nav-link"  data-toggle="tab" href="#zscan-tab">Z-СКАН</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link"  data-toggle="tab" href="#yzscan-tab">YZ-СКАН</a>
+        </li>
       </ul>
 
       <div class="tab-content scan-tabs-content-class">
@@ -97,7 +100,62 @@
         </div>
       </div>
     </div>
-    <div class="tab-pane fade show active" id="zscan-tab">
+
+    <div class="tab-pane fade" id="zscan-tab">
+      <div class="data-space-class">
+        <div class="chart-space-class">
+          <div class="chart-buttons-panel-class">
+            <button id="zscan-y-offset-button" class="chart-button-class" tabindex="-1">
+                <img src="./Images/up-down.png" class="chart-button-image-class"></img>
+            </button>
+            <label id="zscan-zoom-button" class="chart-radio-class" tabindex="-1">
+              <input type="radio" name="chart-buttons-group" id="chart-zoom-state" checked="checked">
+              <img src="./Images/zoom-in.png" class="chart-radio-image-class"></img>
+            </label>
+            <label id="zscan-drag-button" class="chart-radio-class" tabindex="-1">
+              <input type="radio" name="chart-buttons-group" id="chart-drag-state">
+              <img src="./Images/drag.png" class="chart-radio-image-class"></img>
+            </label>
+            <button id="zscan-clear-selection-button" class="chart-button-class" tabindex="-1">
+                <img src="./Images/clear-selection.png" class="chart-button-image-class"></img>
+            </button>
+          </div>
+          <div class="path-chart-class" id="zscan-path-chart"></div>
+        </div>
+
+        <div class="table-space-class">
+          <div class="dots-count-table-container-class">
+            <table class="table table-sm table-info" style="margin: 0; border-radius: 0.8rem;">
+              <thead>
+                <tr>
+                  <th colspan="3" style="border: none">Количество точек</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Всего</td>
+                  <td><label id="zscan-all-dots-count-label">0</label></td>
+                  <td><button class="btn-sm btn-outline-dark" style="width:25px;height:25px;padding:0px" tabindex="-1" onclick="onOpenDotsCountDialog()">...</button></td>
+                </tr>
+                <tr>
+                  <td>Хорошие</td>
+                  <td><label id="zscan-good-dots-count-label">0</label></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Плохие</td>
+                  <td><label id="zscan-bad-dots-count-label">0</label></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="zscan-path-table" class="path-table"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="yzscan-tab">
     </div>
 
     </div>
@@ -243,45 +301,6 @@
               </div>
               </div>
 
-            <!--  <div class="form-group" style="margin-top:30;">
-                <label for="block-number-input">DATA BLOCK</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">DB</span>
-                  </div>
-                  <input class="form-control focusable" id="block-number-input">
-                </div>
-              </div>
-
-              <div class="form-group" style="margin-top:30;">
-                <label for="number-of-dots-address-input">Количество точек (INT)</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">Адрес</span>
-                  </div>
-                  <input class="form-control focusable" id="number-of-dots-address-input">
-                </div>
-              </div>
-
-              <div class="form-group" style="margin-top:30;">
-                <label for="y-array-address-input">Tочки (REAL, ARRAY)</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">Адрес</span>
-                  </div>
-                  <input class="form-control focusable" id="y-array-address-input">
-                </div>
-              </div>
-
-              <div class="form-group" style="margin-top:30;">
-                <label for="y-status-array-address-input">Статусы точек (BOOL, ARRAY)</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">Адрес</span>
-                  </div>
-                  <input class="form-control focusable" id="y-status-array-address-input">
-                </div>
-              </div> -->
             </form>
           </div>
 

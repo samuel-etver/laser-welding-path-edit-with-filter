@@ -85,9 +85,6 @@ window.onload = function() {
 
   for(let scan of allScans) {
     let prefix = scan.name.toLowerCase() + '-';
-    if (prefix == 'zscan-') {
-      break;
-    }
 
     let yOffsetButton = document.getElementById(prefix + 'y-offset-button');
     yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
@@ -107,6 +104,7 @@ window.onload = function() {
 
     buildPathChart(scan);
     buildPathTable(scan);
+    break;
   }
   setChartState();
 

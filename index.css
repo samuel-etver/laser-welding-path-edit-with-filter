@@ -12,6 +12,7 @@ body {
     user-select: none;
 }
 
+
 #scan-tabs {
     width: 100vw;
     padding:0;
@@ -48,10 +49,7 @@ body {
   padding: 0;
 }
 
-#yscan-tab {
-  position: relative;
-  display: block;
-  width: 100%;
+#yscan-tab, #zscan-tab, #yzscan-tab {
   height: 100%;
 }
 
