@@ -26,18 +26,26 @@ var yScan = {
   tableSelection: {
     fromIndex: null,
     toIndex: null
+  },
+  createPage: function() {
+    createScanPage(this)
   }
 };
+
 var zScan = Object.assign({}, yScan);
 for (let fieldName of ['chartSelection', 'tableSelection']) {
   zScan[fieldName] = Object.assign({}, yScan[fieldName]);
 }
 zScan.name = 'zScan';
 
-var allScans = [
-  yScan,
-  zScan
-];
+var yzScan = {
+  name: 'yzScan',
+  createPage: function() {
+  }
+}
+
+var activeScan = yScan;
+
 var draggedDotIndex;
 var ctrlKey;
 var dragStartY;
@@ -82,36 +90,42 @@ window.onload = function() {
   var exitButton = document.getElementById('exit-button');
   exitButton.addEventListener('click', () => window.close());
 
-
-  for(let scan of allScans) {
-    let prefix = scan.name.toLowerCase() + '-';
-
-    let yOffsetButton = document.getElementById(prefix + 'y-offset-button');
-    yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
-
-    let zoomButton = document.getElementById(prefix + 'zoom-button');
-    zoomButton.addEventListener('click', onChartButtonClick);
-
-    let dragButton = document.getElementById(prefix + 'drag-button');
-    dragButton.addEventListener('click', onChartButtonClick);
-
-    let clearSelectionButton = document.getElementById(prefix + "clear-selection-button");
-    clearSelectionButton.addEventListener('click', onClearSelectionButtonClick);
-
-    scan.allDotsCountLabel = document.getElementById(prefix + 'all-dots-count-label');
-    scan.badDotsCountLabel = document.getElementById(prefix + 'bad-dots-count-label');
-    scan.goodDotsCountLabel = document.getElementById(prefix + 'good-dots-count-label');
-
-    buildPathChart(scan);
-    buildPathTable(scan);
-    break;
-  }
+  yScan.createPage();
   setChartState();
 
   prepareDialogs();
 
+  $('a[data-toggle="tab"]').on('shown.bs.tab', onChangeScanTabs);
+
   window.addEventListener('resize', event => onResizeWindow(event));
+
   onResizeWindow()
+}
+
+
+function createScanPage(scan) {
+  let prefix = scan.name.toLowerCase() + '-';
+
+  let yOffsetButton = document.getElementById(prefix + 'y-offset-button');
+  yOffsetButton.addEventListener('click', () => onOpenYOffsetDialog())
+
+  let zoomButton = document.getElementById(prefix + 'zoom-button');
+  zoomButton.addEventListener('click', onChartButtonClick);
+
+  let dragButton = document.getElementById(prefix + 'drag-button');
+  dragButton.addEventListener('click', onChartButtonClick);
+
+  let clearSelectionButton = document.getElementById(prefix + "clear-selection-button");
+  clearSelectionButton.addEventListener('click', onClearSelectionButtonClick);
+
+  scan.allDotsCountLabel = document.getElementById(prefix + 'all-dots-count-label');
+  scan.badDotsCountLabel = document.getElementById(prefix + 'bad-dots-count-label');
+  scan.goodDotsCountLabel = document.getElementById(prefix + 'good-dots-count-label');
+
+  buildPathChart(scan);
+  buildPathTable(scan);
+
+  scan.pageCreated = true;
 }
 
 
@@ -380,6 +394,10 @@ function onWriteButtonClick() {
   var globalVarNames = [
     'controllerIp'
   ];
+  var allScans = [
+    yScan,
+    zScan
+  ];
   for (let scan of allScans) {
     let prefix = scan.name + '.';
     globalVarNames.push(
@@ -403,6 +421,10 @@ function onWriteButtonClick() {
   };
 
   setVar(undefined, 'ip', globalVars.controllerIp);
+  var allScans = [
+    yScan,
+    zScan
+  ];
   for (let scan of allScans) {
     var scanName = scan.name;
     setVar(scanName, 'block-number', globalVars[scanName + '.blockNumber'], 'DB');
@@ -415,7 +437,7 @@ function onWriteButtonClick() {
 }
 
 
-function writePathToSimatic() {  
+function writePathToSimatic() {
   var el = document.getElementById('write-confirmation-modal-dialog-yscan-path-select');
   ipc.sendSync('set-global', {
     writePathType: (el.value == '1' ? 'before' : 'after'),
@@ -547,6 +569,10 @@ function filterPath(scan) {
 
 
 function onResizeWindow() {
+  var allScans = [
+    yScan,
+    zScan
+  ];
   for(var scan of allScans) {
     scan.pathChart.replot();
   }
@@ -709,6 +735,10 @@ function onOpenOptionsDialog() {
   var varNames = [
     'controllerIp',
   ];
+  var allScans = [
+    yScan,
+    zScan
+  ];
   for (var scan of allScans) {
     var scanName = scan.name + '.';
     varNames.push(
@@ -723,6 +753,10 @@ function onOpenOptionsDialog() {
   var ipInput = document.getElementById('ip-input');
   ipInput.value = globalVars.controllerIp;
 
+  var allScans = [
+    yScan,
+    zScan
+  ];
   for (let scan of allScans) {
     let name = scan.name;
     let prefix = name.toLowerCase() + '-';
@@ -750,6 +784,10 @@ function onOptionsDialogOkClick() {
   var ipInput = document.getElementById('ip-input');
   values['controllerIp'] = ipInput.value;
 
+  var allScans = [
+    yScan,
+    zScan
+  ];
   for (let scan of allScans) {
     let name = scan.name;
     let prefix = name.toLowerCase() + '-';
@@ -934,6 +972,10 @@ function onWriteConfirmationModalDialogScanSelect(el) {
     'y-status-array-address'
   ];
 
+  var allScans = [
+    yScan,
+    zScan
+  ];
   for (var scan of allScans) {
     var scanName = scan.name;
     var hidden = !visible[scanName];
@@ -1234,6 +1276,24 @@ function onChartRangeSelectionDialogOkClick() {
 }
 
 
+function onChangeScanTabs(e) {
+  var href = e.target.href;
+  var tabId = href.substring(href.indexOf('#') + 1);
+  switch(tabId) {
+    case 'yscan-tab':
+      activeScan = yScan;
+      break;
+    case 'zscan-tab':
+      activeScan = zScan;
+      break;
+  }
+
+  if (!activeScan.pageCreated) {
+    activeScan.createPage();
+  }
+}
+
+
 function getActiveScan() {
-  return yScan;
+  return activeScan;
 }
