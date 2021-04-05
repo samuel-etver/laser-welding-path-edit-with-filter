@@ -525,7 +525,10 @@ function onLoadClick() {
     saveConfig();
     loadFile(filename).then(
       () => {
-        mainWindow.send('set-path-data', yScan.weldingPathData);
+        mainWindow.send('set-path-data', {
+          yScan: yScan.weldingPathData,
+          zScan: zScan.weldingPathData
+        });
       },
       () => {
         mainWindow.send(
@@ -601,6 +604,10 @@ function loadFromXmlFile(filename) {
                   if ( status ) {
                     status = 1;
                   }
+                  break;
+                case 'z':
+                  break;
+                case 'z_status':
                   break;
               }
             }

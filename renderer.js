@@ -52,9 +52,11 @@ var dragStartY;
 
 window.onload = function() {
   ipc.on('set-path-data', (event, arg) => {
+    yScan.originalWeldingPathData =
+    yScan.modifiedWeldingPathData = arg.yScan;
+    zScan.originalWeldingPathData = 
+    zScan.modifiedWeldingPathData = arg.zScan;
     var scan = yScan;
-    scan.originalWeldingPathData = arg;
-    scan.modifiedWeldingPathData = arg;
     filterPath(scan);
     refreshWeldingPathTable(scan);
     refreshPathChart(scan);
