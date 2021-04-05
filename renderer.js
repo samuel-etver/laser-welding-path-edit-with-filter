@@ -28,7 +28,7 @@ var yScan = {
     toIndex: null
   },
   createPage: function() {
-    createScanPage(this)
+    createScanPage(this);
   }
 };
 
@@ -62,9 +62,10 @@ window.onload = function() {
   });
 
   ipc.on('get-path-data', () => {
-    var scan = yScan;
-    readModifiedWeldingPathData(scan);
-    ipc.send('get-path-data-reply', scan.modifiedWeldingPathData);
+    ipc.send('get-path-data-reply', {
+      yScan: yScan.modifiedWeldingPathData,
+      zScan: zScan.modifiedWeldingPathData
+    });
   });
   ipc.on('open-options-dialog', () => onOpenOptionsDialog());
   ipc.on('open-error-dialog', (event, arg) => onOpenErrorDialog(arg));
@@ -438,14 +439,32 @@ function onWriteButtonClick() {
 
 
 function writePathToSimatic() {
-  var el = document.getElementById('write-confirmation-modal-dialog-yscan-path-select');
-  ipc.sendSync('set-global', {
-    writePathType: (el.value == '1' ? 'before' : 'after'),
-  });
-  var scan = yScan;
-  readModifiedWeldingPathData(scan);
-  filterPath(scan);
-  ipc.send('write-path', scan.modifiedWeldingPathData);
+  var globalVars = {};
+  var allScans = [yScan, zScan];
+  for (var scan of allScans) {
+    var name = scan.name;
+    var el = document.getElementById('write-confirmation-modal-dialog-' +
+      name.toLowerCase() + '-path-select');
+      globalVars[name + '.writePathType'] = el.value == '1' ? 'before' : 'after';
+  }
+  ipc.sendSync('set-global', globalVars);
+
+  el = document.getElementById('write-confirmation-modal-dialog-scan-select');
+  allScans = [];
+  if (el.value == '1' || el.value == '3') {
+    allScans.push(yScan);
+  }
+  if (el.value == '2' || el.value == '3') {
+    allScans.push(zScan);
+  }
+
+  var data = {};
+  for (scan of allScans) {
+    readModifiedWeldingPathData(scan);
+    filterPath(scan);
+    data[scan.name] = scan.modifiedWeldingPathData;
+  }
+  ipc.send('write-path', data);
 }
 
 

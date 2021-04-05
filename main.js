@@ -27,10 +27,10 @@ var globalVars = {
     yArrayAddress: '',
     yStatusArrayAddress: '',
     numberOfDotsAddress: '',
+    writePathType: '',
   },
   userPath: '',
   homeDir: path.join(process.env.APPDATA, constants.appName),
-  writePathType: '',
   debug: false,
 };
 globalVars.zScan = Object.assign({}, globalVars.yScan);
@@ -53,6 +53,9 @@ var yScan = {
   name: 'yScan',
   weldingPathData: []
 };
+var zScan = Object.assign({}, yScan);
+zScan.name = 'zScan';
+
 var allScans = [
   yScan
 ];
@@ -62,7 +65,6 @@ var simaticVars = {
 };
 
 loadConfig();
-
 
 function createWindow () {
   mainWindow = new BrowserWindow({
@@ -161,7 +163,7 @@ app.on('activate', function () {
 });
 
 
-function checkSimaticAddresses() {
+function checkSimaticAddresses(allScans) {
   var showError = txt => {
       mainWindow.send('open-error-dialog', txt);
   };
@@ -318,7 +320,8 @@ function readPathFromSimatic(sender) {
     sender.send('read-path-reply', data);
   }
 
-  if ( !checkSimaticAddresses() ) {
+  var allScans = [yScan, zScan];
+  if ( !checkSimaticAddresses(allScans) ) {
       return;
   }
   buildSimaticVars();
@@ -329,9 +332,18 @@ function readPathFromSimatic(sender) {
 
 
 function writePathToSimatic(sender, data) {
-  yScan.weldingPathData = data;
+  yScan.weldingPathData = data.yScan;
 
-  if ( !checkSimaticAddresses() ) {
+  var allScans = [];
+  if (data.yScan !== undefined) {
+    allScans.push(yScan);
+  }
+  if (data.zScan !== undefined) {
+    allScans.push(zScan);
+  }
+
+
+  if ( !checkSimaticAddresses(allScans) ) {
       return;
   }
   buildSimaticVars();
@@ -345,10 +357,10 @@ function writePathToSimatic(sender, data) {
   var n = constants.dotsCountMax;
   var i;
 
-  var getY = getGlobalVar('writePathType') == 'after'
+  var getY = getGlobalVar('yScan.writePathType') == 'after'
     ? item => item.filteredY
     : item => item.y;
-  var getStatus = getGlobalVar('writePathType') == 'after'
+  var getStatus = getGlobalVar('yScan.writePathType') == 'after'
     ? item => true
     : item => item.status;
 
@@ -670,7 +682,9 @@ function onSaveClick() {
   function onGetPathData(data) {
     ipc.removeAllListeners('get-path-data-reply');
 
-    yScan.weldingPathData = data;
+    yScan.weldingPathData = data.yScan;
+    zScan.weldingPathData = data.zScan;
+
     var defaultPath = getGlobalVar('userPath');
 
     dialog.showSaveDialog(
@@ -718,33 +732,64 @@ function saveFile(filename) {
     );
   }
 
+  var data = [];
+  var yScanLen = yScan.weldingPathData.length;
+  var zScanLen = zScan.weldingPathData.length;
+  var n = yScanLen > zScanLen ? yScanLen : zScanLen;
+  for (var i = 0; i < n; i++) {
+    if (i < yScanLen) {
+      var item = yScan.weldingPathData[i];
+      var yScanY = item.y.toString();
+      var yScanStatus = item.status.toString();
+    }
+    else {
+      yScanY = '';
+      yScanStatus = '';
+    }
+
+    if (i < zScanStatus) {
+      item = zScan.weldingPathData[i];
+      var zScanY = item.y.toString();
+      var zScanStatus = item.status.toString();
+    }
+    else {
+      zScanY = '';
+      zScanStatus = '';
+    }
+    data.push( [yScanY, yScanStatus,
+                zScanY, zScanStatus] );
+  }
+
   switch(ext) {
     case '.xml':
-      saveToXmlFile(filename).catch(failed);
+      saveToXmlFile(filename, data).catch(failed);
       break;
     case '.csv':
-      saveToCsvFile(filename).catch(failed);
+      saveToCsvFile(filename, data).catch(failed);
       break;
   }
 }
 
 
-function saveToXmlFile(filename) {
+function saveToXmlFile(filename, data) {
   var doc = new xmldom.DOMParser().parseFromString(
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<laser_welding_path_editor/>');
   var rootEl = doc.documentElement;
   var pathEl = doc.createElement('path');
   rootEl.appendChild(pathEl);
-  for (var item of yScan.weldingPathData) {
+  var fields = ['y', 'status', 'z', 'z_status'];
+  for (var item of data) {
     var itemEl = doc.createElement('item');
     pathEl.appendChild(itemEl);
-    var yEl = doc.createElement('y');
-    yEl.appendChild(doc.createTextNode(item.y.toString()));
-    itemEl.appendChild(yEl);
-    var statusEl = doc.createElement('status');
-    statusEl.appendChild(doc.createTextNode(item.status.toString()));
-    itemEl.appendChild(statusEl);
+    for(var i = 0; i < fields.length; i++) {
+      var value = item[i];
+      if (value !== undefined && value.length) {
+        var el = doc.createElement(fields[i]);
+        el.appendChild(doc.createTextNode(value));
+        itemEl.appendChild(el);
+      }
+    }
   }
   var serializer = new xmldom.XMLSerializer();
   var txt = serializer.serializeToString(doc);
@@ -760,20 +805,13 @@ function saveToXmlFile(filename) {
 }
 
 
-function saveToCsvFile(filename) {
+function saveToCsvFile(filename, data) {
   const writer = csvWriter.createArrayCsvWriter({
     path: filename,
-    header: ['Y','STATUS'],
+    header: ['Y','STATUS','Z', 'Z-STATUS'],
     fieldDelimiter: ';',
     recordDelimiter: '\r\n'
   });
-  var data = [];
-  for (var item of yScan.weldingPathData) {
-    data.push([
-      item.y,
-      item.status
-    ]);
-  }
   return writer.writeRecords(data);
 }
 
