@@ -56,10 +56,6 @@ var yScan = {
 var zScan = Object.assign({}, yScan);
 zScan.name = 'zScan';
 
-var allScans = [
-  yScan
-];
-
 var simaticConn;
 var simaticVars = {
 };
@@ -676,12 +672,10 @@ function loadFromCsvFile(filename) {
 
 
 function onSaveClick() {
-  ipc.on('get-path-data-reply', (event, arg) => onGetPathData(arg) );
-  yScan.weldingPathData = mainWindow.send('get-path-data');
+  ipc.once('get-path-data-reply', (event, arg) => onGetPathData(arg) );
+  mainWindow.send('get-path-data');
 
   function onGetPathData(data) {
-    ipc.removeAllListeners('get-path-data-reply');
-
     yScan.weldingPathData = data.yScan;
     zScan.weldingPathData = data.zScan;
 

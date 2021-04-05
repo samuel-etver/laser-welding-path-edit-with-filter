@@ -856,9 +856,10 @@ function onChartButtonClick() {
 
 function setChartState() {
   var activeScan = getActiveScan();
+  var prefix = activeScan.name.toLowerCase();
 
-  var zoomActivated = document.getElementById('chart-zoom-state').checked;
-  var dragActivated = document.getElementById('chart-drag-state').checked;
+  var zoomActivated = document.getElementById(prefix + '-chart-zoom-state').checked;
+  var dragActivated = document.getElementById(prefix + '-chart-drag-state').checked;
 
   activeScan.pathChart.series[1].plugins.draggable = dragActivated
    ? activeScan.pathChart.mx.options.draggablePlugin
