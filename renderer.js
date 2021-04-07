@@ -29,7 +29,9 @@ var yScan = {
   },
   createPage: function() {
     createScanPage(this);
-  }
+  },
+  pageCreated: false,
+  pageShown: false,
 };
 
 var zScan = Object.assign({}, yScan);
@@ -51,16 +53,22 @@ var ctrlKey;
 var dragStartY;
 
 window.onload = function() {
+  var allScans = [yScan, zScan];
+
   ipc.on('set-path-data', (event, arg) => {
-    yScan.originalWeldingPathData =
-    yScan.modifiedWeldingPathData = arg.yScan;
-    zScan.originalWeldingPathData = 
-    zScan.modifiedWeldingPathData = arg.zScan;
-    var scan = yScan;
-    filterPath(scan);
-    refreshWeldingPathTable(scan);
-    refreshPathChart(scan);
-    refreshDotsCountLabels(scan);
+    for (var scan of allScans) {
+      var scanName = scan.name;
+      scan.originalWeldingPathData =
+      scan.modifiedWeldingPathData = arg[scanName];
+      filterPath(scan);
+      scan.pageShown = false;
+      if (activeScan === scan) {
+        refreshWeldingPathTable(scan);
+        refreshPathChart(scan);
+        refreshDotsCountLabels(scan);
+        scan.pageShown = true;
+      }
+    }
   });
 
   ipc.on('get-path-data', () => {
@@ -1312,6 +1320,17 @@ function onChangeScanTabs(e) {
 
   if (!activeScan.pageCreated) {
     activeScan.createPage();
+    activeScan.pageShown = false;
+  }
+
+
+  if (!activeScan.pageShown) {
+    new Promise(() => {
+      activeScan.pageShown = true;
+      refreshWeldingPathTable(activeScan);
+      refreshPathChart(activeScan);
+      refreshDotsCountLabels(activeScan);
+    });
   }
 }
 

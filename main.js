@@ -558,7 +558,10 @@ function loadFile(filename) {
 
 function loadFromXmlFile(filename) {
   var error = true;
-  var newWeldingPathData = [];
+  var newYWeldingPathData = [];
+  var newZWeldingPathData = [];
+  var yPathDataStop = false;
+  var zPathDataStop = false;
   var promise = new Promise((resolve, reject) => {
     try {
       var txt = fs.readFileSync(filename, 'utf8');
@@ -591,36 +594,57 @@ function loadFromXmlFile(filename) {
           var textNode
           var y = null;
           var status = null;
+          var z = null;
+          var zStatus = null;
           for (var j = 0; j < itemNodes.length; j++) {
             el = itemNodes[j];
             textNode = el.childNodes[0];
             if ( textNode ) {
+              var nodeValue = textNode.nodeValue;
               switch (el.nodeName) {
                 case 'y':
-                  y = parseFloat(textNode.nodeValue);
+                  y = parseFloat(nodeValue);
                   break;
                 case 'status':
-                  status = parseInt(textNode.nodeValue);
+                  status = parseInt(nodeValue);
                   if ( status ) {
                     status = 1;
                   }
                   break;
                 case 'z':
+                  z = parseFloat(nodeValue);
                   break;
                 case 'z_status':
+                  zStatus = parseInt(nodeValue);
                   break;
               }
             }
           }
-          if ( y != null && status != null ) {
-            newWeldingPathData.push({
+
+          if (y == null || status == null) {
+            yPathDataStop = true;
+          }
+          if (z == null || zStatus == null) {
+            zPathDataStop = true;
+          }
+
+          if (!yPathDataStop) {
+            newYWeldingPathData.push({
               y: y,
               status: status
             });
           }
+
+          if (!zPathDataStop) {
+            newZWeldingPathData.push({
+              y: z,
+              status: zStatus
+            });
+          }
         }
 
-        yScan.weldingPathData = newWeldingPathData
+        yScan.weldingPathData = newYWeldingPathData;
+        zScan.weldingPathData = newZWeldingPathData;
         error = false;
       }
     }
