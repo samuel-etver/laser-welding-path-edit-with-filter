@@ -658,8 +658,10 @@ function loadFromXmlFile(filename) {
 
 
 function loadFromCsvFile(filename) {
-  var error = false;
-  var newWeldingPathData = [];
+  var newYWeldingPathData = [];
+  var newZWeldingPathData = [];
+  var yPathDataStop = false;
+  var zPathDataStop = false;
 
   var promise = new Promise((resolve, reject) => {
     fs.createReadStream(filename)
@@ -667,32 +669,54 @@ function loadFromCsvFile(filename) {
         separator: ';'
       }))
       .on('data', data => {
-      if (!error && data.Y && data.STATUS) {
+      if (!yPathDataStop && data.Y && data.STATUS) {
         var y = parseFloat(data.Y);
         var status = parseInt(data.STATUS);
         if ( !isNaN(y) && !isNaN(status) ) {
           if (status != 0) {
             status = 1;
           }
-          newWeldingPathData.push({
+          newYWeldingPathData.push({
             y: y,
             status: status
           });
         }
         else {
-          error = true;
+          yPathDataStop = true;
         }
       }
       else {
-        error = true;
+        yPathDataStop = true;
       }
+
+      if (!zPathDataStop && data.Z && data.Z_STATUS) {
+        y = parseFloat(data.Z);
+        status = parseInt(data.Z_STATUS);
+        if ( !isNaN(y) && !isNaN(status) ) {
+          if (status != 0) {
+            status = 1;
+          }
+          newZWeldingPathData.push({
+            y: y,
+            status: status
+          });
+        }
+        else {
+          zPathDataStop = true;
+        }
+      }
+      else {
+        zPathDataStop = true;
+      }
+
     })
     .on('end', () => {
-      if ( error ) {
+      if ( yPathDataStop && zPathDataStop ) {
         reject();
       }
       else {
-        yScan.weldingPathData = newWeldingPathData;
+        yScan.weldingPathData = newYWeldingPathData;
+        zScan.weldingPathData = newZWeldingPathData;
         resolve();
       }
     });
@@ -772,7 +796,7 @@ function saveFile(filename) {
       yScanStatus = '';
     }
 
-    if (i < zScanStatus) {
+    if (i < zScanLen) {
       item = zScan.weldingPathData[i];
       var zScanY = item.y.toString();
       var zScanStatus = item.status.toString();
@@ -833,7 +857,7 @@ function saveToXmlFile(filename, data) {
 function saveToCsvFile(filename, data) {
   const writer = csvWriter.createArrayCsvWriter({
     path: filename,
-    header: ['Y','STATUS','Z', 'Z-STATUS'],
+    header: ['Y','STATUS','Z', 'Z_STATUS'],
     fieldDelimiter: ';',
     recordDelimiter: '\r\n'
   });
