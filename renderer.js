@@ -133,119 +133,122 @@ function createScanPage(scan) {
   scan.badDotsCountLabel = document.getElementById(prefix + 'bad-dots-count-label');
   scan.goodDotsCountLabel = document.getElementById(prefix + 'good-dots-count-label');
 
-  buildPathChart(scan);
+  buildPathChart(scan, {
+    rangeSelect: true
+  });
   buildPathTable(scan);
 
   scan.pageCreated = true;
 }
 
 
-function buildPathChart(scan) {
+function buildPathChart(scan, buildOptions) {
   let prefix = scan.name.toLowerCase() + '-';
 
   $.jqplot.config.enablePlugins = true;
 
-  scan.pathChart = $.jqplot(prefix + 'path-chart',  [ [,], [,], [,] ],
-    {
-      captureRightClick : true,
-      seriesDefaults: {
-        shadow: false,
+  var chartOptions = {
+    captureRightClick : true,
+    seriesDefaults: {
+      shadow: false,
+      lineWidth: 1,
+    },
+    series: [
+      {
+        color: '#ff55cc',
+        label: 'Исходная',
         lineWidth: 1,
+        showMarker: false,
       },
-      series: [
-        {
-          color: '#ff55cc',
-          label: 'Исходная',
-          lineWidth: 1,
-          showMarker: false,
+      {
+        color: '#ffffff',
+        label: 'Модифицированная',
+        showMarker: true,
+        markerOptions: {
+          shadow: false,
+          size: 7,
+          color: '#ffaa88'
         },
-        {
-          color: '#ffffff',
-          label: 'Модифицированная',
-          showMarker: true,
-          markerOptions: {
-            shadow: false,
-            size: 7,
-            color: '#ffaa88'
-          },
-        },
-        {
-          color: '#9999ff',
-          label: 'После фильтра',
-          lineWidth: 3,
-          showMarker: false,
-        }
-      ],
-      cursor: {
-        style: 'auto',
-        zoom: true,
-        tooltipLocation: 'sw'
       },
-      axes: {
-        xaxis: {
-          pad: 0,
-          rendererOptions: {
-            forceTickAt0: true
-          }
-        }
-      },
-      highlighter: {
-        sizeAdjust: 10,
-        tooltipLocation: 'n',
-        tooltipAxes: 'y',
-        tooltipFormatString: '%.3f',
-        useAxesFormatters: false,
-      },
-      grid: {
-        shadow: false,
-        borderWidth: 0,
-        background: 'black',
-        gridLineColor: '#555555',
-      },
-      gridPadding: {
-        top:    22,
-        bottom: 24,
-        left:   80,
-        right:  20
-      },
-      legend: {
-          show: true,
-          location: 'nw',
-          renderer: $.jqplot.EnhancedLegendRenderer,
-          rendererOptions: {
-              numberColumns: 3,
-              seriesToggleReplot: true,
-          }
-      },
-      canvasOverlay: {
-        show: true,
-        objects: [
-          {
-             rectangle: {
-               xmin: -1001,
-               xmax: -1000,
-               xminOffset: "0px",
-               xmaxOffset: "0px",
-               yminOffset: "0px",
-               ymaxOffset: "0px",
-               color: "rgba(0, 200, 200, 0.3)",
-               showTooltip: false
-             }
-          },
-          {
-            verticalLine: {
-              x: -1000,
-              yminOffset: '0px',
-              ymaxOffset: '0px',
-              lineWidth: 3,
-              color: 'rgba(0, 200, 200)',
-              shadow: false
-            }
-          }
-        ]
+      {
+        color: '#9999ff',
+        label: 'После фильтра',
+        lineWidth: 3,
+        showMarker: false,
       }
+    ],
+    cursor: {
+      style: 'auto',
+      zoom: true,
+      tooltipLocation: 'sw'
+    },
+    axes: {
+      xaxis: {
+        pad: 0,
+        rendererOptions: {
+          forceTickAt0: true
+        }
+      }
+    },
+    highlighter: {
+      sizeAdjust: 10,
+      tooltipLocation: 'n',
+      tooltipAxes: 'y',
+      tooltipFormatString: '%.3f',
+      useAxesFormatters: false,
+    },
+    grid: {
+      shadow: false,
+      borderWidth: 0,
+      background: 'black',
+      gridLineColor: '#555555',
+    },
+    gridPadding: {
+      top:    22,
+      bottom: 24,
+      left:   80,
+      right:  20
+    },
+    legend: {
+        show: true,
+        location: 'nw',
+        renderer: $.jqplot.EnhancedLegendRenderer,
+        rendererOptions: {
+            numberColumns: 3,
+            seriesToggleReplot: true,
+        }
+    },
+  };
+  if (buildOptions.rangeSelect) {
+    chartOptions.canvasOverlay = {
+      show: true,
+      objects: [
+        {
+           rectangle: {
+             xmin: -1001,
+             xmax: -1000,
+             xminOffset: "0px",
+             xmaxOffset: "0px",
+             yminOffset: "0px",
+             ymaxOffset: "0px",
+             color: "rgba(0, 200, 200, 0.3)",
+             showTooltip: false
+           }
+        },
+        {
+          verticalLine: {
+            x: -1000,
+            yminOffset: '0px',
+            ymaxOffset: '0px',
+            lineWidth: 3,
+            color: 'rgba(0, 200, 200)',
+            shadow: false
+          }
+        }
+      ]
     }
-  );
+  };
+  scan.pathChart = $.jqplot(prefix + 'path-chart',  [ [,], [,], [,] ], chartOptions);
 
   var series = scan.pathChart.series;
   series[0].plugins.draggable = undefined;
@@ -256,8 +259,10 @@ function buildPathChart(scan) {
 
   pathChartRef.on('jqplotDragStart', onDragStartPathChart);
   pathChartRef.on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
-  pathChartRef.on('jqplotClick', onChartClick);
-  pathChartRef.on('jqplotRightClick', onChartContextMenu);
+  if (buildOptions.rangeSelect) {
+    pathChartRef.on('jqplotClick', onChartClick);
+    pathChartRef.on('jqplotRightClick', onChartContextMenu);
+  }
 
   scan.pathChart.mx = {
     options: {
