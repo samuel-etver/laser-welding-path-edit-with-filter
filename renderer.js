@@ -134,7 +134,9 @@ function createScanPage(scan) {
   scan.goodDotsCountLabel = document.getElementById(prefix + 'good-dots-count-label');
 
   buildPathChart(scan, {
-    rangeSelect: true
+    rangeSelect: true,
+    backgroundColor: scan.name == 'yScan' ? '#003' : '#030',
+    draggable: true,
   });
   buildPathTable(scan);
 
@@ -200,7 +202,7 @@ function buildPathChart(scan, buildOptions) {
     grid: {
       shadow: false,
       borderWidth: 0,
-      background: 'black',
+      background: buildOptions.backgroundColor,
       gridLineColor: '#555555',
     },
     gridPadding: {
@@ -252,13 +254,20 @@ function buildPathChart(scan, buildOptions) {
 
   var series = scan.pathChart.series;
   series[0].plugins.draggable = undefined;
-  series[1].plugins.draggable.constrainTo = 'y';
+  if (buildOptions.draggable) {
+    series[1].plugins.draggable.constrainTo ='y';
+  }
+  else {
+    series[1].plugins.draggable = undefined;
+  }
   series[2].plugins.draggable = undefined;
 
   var pathChartRef =   $('#' + prefix + 'path-chart');
 
-  pathChartRef.on('jqplotDragStart', onDragStartPathChart);
-  pathChartRef.on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
+  if (buildOptions.draggable) {
+    pathChartRef.on('jqplotDragStart', onDragStartPathChart);
+    pathChartRef.on('jqplotDragStop', () => { onDragStopPathChart(draggedDotIndex); });
+  }
   if (buildOptions.rangeSelect) {
     pathChartRef.on('jqplotClick', onChartClick);
     pathChartRef.on('jqplotRightClick', onChartContextMenu);
