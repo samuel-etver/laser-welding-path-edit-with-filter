@@ -64,7 +64,6 @@ body {
 
 #yzscan-tab > .data-space-class {
   display: grid;
-  background-color: gray;
   grid-gap: 8px;
   grid-column: 1fr;
   grid-row: 1fr 1fr;
@@ -282,8 +281,4 @@ body {
 
 .close:active {
   outline-style: none;
-}
-
-.yzscan-path-chart {
-  background-color: red;
 }

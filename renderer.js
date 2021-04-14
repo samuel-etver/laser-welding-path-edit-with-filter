@@ -32,6 +32,42 @@ var yScan = {
   },
   pageCreated: false,
   pageShown: false,
+  onResize: function() {
+    this.replot();
+  },
+  replot: function() {
+    this.pathChart.replot();
+  },
+  onResetZoom: function() {
+    this.resetZoom();
+  },
+  resetZoom: function() {
+    var scan = this;
+    var activateZoom = false;
+    if ( !scan.pathChart.plugins.cursor._zoom ) {
+      scan.pathChart.plugins.cursor._zoom = scan.pathChart.mx.options.zoomPlugin;
+      activateZoom = true;
+    }
+
+    scan.pathChart.resetZoom();
+
+    if ( activateZoom ) {
+      scan.pathChart.plugins.cursor._zoom = undefined;
+    }
+
+    scan.pathChart.replot({ resetAxes: true});
+  },
+  refreshPage: function() {
+    refreshPathChart(this);
+    refreshWeldingPathTable(this);
+    refreshDotsCountLabels(this);
+  },
+  onResetModifiedPathData: function() {
+    this.yOffset = 0;
+    this.modifiedWeldingPathData = activeScan.originalWeldingPathData;
+    xyScan.pageShown = false;
+    new Promise(() => this.refreshPage());
+  }
 };
 
 var zScan = Object.assign({}, yScan);
@@ -42,7 +78,52 @@ zScan.name = 'zScan';
 
 var yzScan = {
   name: 'yzScan',
+  yScan: {
+    name: 'yzScan-yScan'
+  },
+  zScan: {
+    name: 'yzScan-zScan'
+  },
   createPage: function() {
+    buildPathChart(this.yScan, {
+      backgroundColor: '#003',
+    });
+    buildPathChart(this.zScan, {
+      backgroundColor: '#030',
+    });
+    this.pageCreated = true;
+  },
+  onResize: function() {
+    this.replot();
+  },
+  replot: function() {
+    this.yScan.pathChart.replot();
+    this.zScan.pathChart.replot();
+  },
+  onResetZoom: function() {
+    this.resetZoom();
+  },
+  resetZoom: function() {
+    for(var scan of [this.yScan, this.zScan]) {
+      scan.pathChart.resetZoom();
+      scan.pathChart.replot({ resetAxes: true});
+    }
+  },
+  refreshPage: function() {
+    yzScan.yScan.originalWeldingPathData =
+    yzScan.yScan.modifiedWeldingPathData = yScan.modifiedWeldingPathData;
+    yzScan.zScan.originalWeldingPathData =
+    yzScan.zScan.modifiedWeldingPathData = zScan.modifiedWeldingPathData;
+    refreshPathChart(this.yScan);
+    refreshPathChart(this.zScan);
+  },
+  onResetModifiedPathData: function() {
+    for(var scan of [yScan, zScan]) {
+      scan.yOffset = 0;
+      scan.modifiedWeldingPathData = scan.originalWeldingPathData;
+      scan.pageShown = false;
+    }
+    new Promise(() => this.refreshPage());
   }
 }
 
@@ -62,13 +143,10 @@ window.onload = function() {
       scan.modifiedWeldingPathData = arg[scanName];
       filterPath(scan);
       scan.pageShown = false;
-      if (activeScan === scan) {
-        refreshWeldingPathTable(scan);
-        refreshPathChart(scan);
-        refreshDotsCountLabels(scan);
-        scan.pageShown = true;
-      }
     }
+
+    activeScan.refreshPage();
+    activeScan.pageShown = true;
   });
 
   ipc.on('get-path-data', () => {
@@ -91,12 +169,12 @@ window.onload = function() {
   resetModificationButton.addEventListener('click', () => {
     openConfirmationDialog(
       'Все изменения будут потеряны. Продолжить?',
-      onResetModifiedPathData
+      () => getActiveScan().onResetModifiedPathData()
     );
   });
 
   var resetZoomButton = document.getElementById('reset-zoom-button');
-  resetZoomButton.addEventListener('click', resetZoom);
+  resetZoomButton.addEventListener('click', () => activeScan.onResetZoom());
 
   var exitButton = document.getElementById('exit-button');
   exitButton.addEventListener('click', () => window.close());
@@ -108,7 +186,7 @@ window.onload = function() {
 
   $('a[data-toggle="tab"]').on('shown.bs.tab', onChangeScanTabs);
 
-  window.addEventListener('resize', event => onResizeWindow(event));
+  window.addEventListener('resize', onResizeWindow);
 
   onResizeWindow()
 }
@@ -392,9 +470,7 @@ function readPathFromSimatic() {
     scan.originalWeldingPathData = arg;
     scan.modifiedWeldingPathData = arg;
     filterPath(scan);
-    refreshWeldingPathTable(scan);
-    refreshPathChart(scan);
-    refreshDotsCountLabels(scan);
+    scan.refreshPage();
   });
 
   ipc.send('read-path', "");
@@ -524,18 +600,6 @@ function readModifiedWeldingPathData(scan) {
 }
 
 
-function onResetModifiedPathData() {
-  var activeScan = getActiveScan();
-  activeScan.yOffset = 0;
-  activeScan.modifiedWeldingPathData = activeScan.originalWeldingPathData;
-  new Promise(() => {
-    refreshPathChart(activeScan);
-    refreshWeldingPathTable(activeScan);
-    refreshDotsCountLabels(activeScan);
-  });
-}
-
-
 function refreshPathChart(scan, options) {
   var weldingData = scan.modifiedWeldingPathData;
   var originalData = [];
@@ -612,31 +676,7 @@ function filterPath(scan) {
 
 
 function onResizeWindow() {
-  var allScans = [
-    yScan,
-    zScan
-  ];
-  for(var scan of allScans) {
-    scan.pathChart.replot();
-  }
-}
-
-
-function resetZoom() {
-  var activeScan = getActiveScan();
-  var activateZoom = false;
-  if ( !activeScan.pathChart.plugins.cursor._zoom ) {
-    activeScan.pathChart.plugins.cursor._zoom = activeScan.pathChart.mx.options.zoomPlugin;
-    activateZoom = true;
-  }
-
-  activeScan.pathChart.resetZoom();
-
-  if ( activateZoom ) {
-    activeScan.pathChart.plugins.cursor._zoom = undefined;
-  }
-
-  activeScan.pathChart.replot ( { resetAxes: true} );
+  activeScan.onResize();
 }
 
 
@@ -727,8 +767,8 @@ function onPathTableDataEdited(data) {
   new Promise(() => {
     readModifiedWeldingPathData(activeScan);
     filterPath(activeScan);
-    refreshPathChart(activeScan, { resetAxes: false });
     refreshWeldingPathTable(activeScan);
+    refreshPathChart(activeScan, { resetAxes: false });
     refreshDotsCountLabels(activeScan);
   });
 }
@@ -750,9 +790,7 @@ function resizeWeldingData(scan, newSize) {
   }
 
   filterPath(scan);
-  refreshWeldingPathTable(scan);
-  refreshPathChart(scan);
-  refreshDotsCountLabels(scan);
+  scan.refreshPage();
 }
 
 
@@ -1097,9 +1135,7 @@ function refreshAll(scan, cb) {
       cb();
     }
     filterPath(scan);
-    refreshPathChart(scan);
-    refreshWeldingPathTable(scan);
-    refreshDotsCountLabels(scan);
+    scan.refreshPage();
   });
 }
 
@@ -1330,6 +1366,9 @@ function onChangeScanTabs(e) {
     case 'zscan-tab':
       activeScan = zScan;
       break;
+    case 'yzscan-tab':
+      activeScan = yzScan;
+      activeScan.pageShown = false;
   }
 
   if (!activeScan.pageCreated) {
@@ -1341,11 +1380,13 @@ function onChangeScanTabs(e) {
   if (!activeScan.pageShown) {
     new Promise(() => {
       activeScan.pageShown = true;
-      refreshWeldingPathTable(activeScan);
-      refreshPathChart(activeScan);
-      refreshDotsCountLabels(activeScan);
+      activeScan.refreshPage();
     });
   }
+
+  new Promise(() => {
+    activeScan.replot();
+  });
 }
 
 
