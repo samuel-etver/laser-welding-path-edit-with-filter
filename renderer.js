@@ -64,7 +64,7 @@ var yScan = {
   },
   onResetModifiedPathData: function() {
     this.yOffset = 0;
-    this.modifiedWeldingPathData = activeScan.originalWeldingPathData;
+    this.modifiedWeldingPathData = getActiveScan().originalWeldingPathData;
     xyScan.pageShown = false;
     new Promise(() => this.refreshPage());
   }
@@ -145,8 +145,9 @@ window.onload = function() {
       scan.pageShown = false;
     }
 
-    activeScan.refreshPage();
-    activeScan.pageShown = true;
+    scan = getActiveScan();
+    scan.refreshPage();
+    scan.pageShown = true;
   });
 
   ipc.on('get-path-data', () => {
@@ -174,7 +175,7 @@ window.onload = function() {
   });
 
   var resetZoomButton = document.getElementById('reset-zoom-button');
-  resetZoomButton.addEventListener('click', () => activeScan.onResetZoom());
+  resetZoomButton.addEventListener('click', () => getActiveScan().onResetZoom());
 
   var exitButton = document.getElementById('exit-button');
   exitButton.addEventListener('click', () => window.close());
@@ -466,11 +467,16 @@ function buildPathTable(scan) {
 
 function readPathFromSimatic() {
   ipc.on('read-path-reply', (event, arg) => {
-    var scan = yScan;
-    scan.originalWeldingPathData = arg;
-    scan.modifiedWeldingPathData = arg;
-    filterPath(scan);
-    scan.refreshPage();
+    yScan.originalWeldingPathData =
+    yScan.modifiedWeldingPathData = arg.yScan;
+    zScan.originalWeldingPathData =
+    zScan.modifiedWeldingPathData = arg.zScan;
+    for (var scan of [yScan, zScan]) {
+      filterPath(scan);
+      scan.pageShown = false;
+    }
+    yzScan.pageShown = false;
+    getActiveScan().refreshPage();
   });
 
   ipc.send('read-path', "");
@@ -560,7 +566,9 @@ function writePathToSimatic() {
 
   var data = {};
   for (scan of allScans) {
-    readModifiedWeldingPathData(scan);
+    if (getActiveScan() === scan) {
+      readModifiedWeldingPathData(scan);
+    }
     filterPath(scan);
     data[scan.name] = scan.modifiedWeldingPathData;
   }
@@ -676,7 +684,7 @@ function filterPath(scan) {
 
 
 function onResizeWindow() {
-  activeScan.onResize();
+  getActiveScan().onResize();
 }
 
 

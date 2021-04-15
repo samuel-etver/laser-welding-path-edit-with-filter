@@ -203,24 +203,28 @@ function checkSimaticAddresses(allScans) {
 }
 
 
-function buildSimaticVars() {
-  var block = 'DB' + parseInt(getGlobalVar('yScan.blockNumber')) + ',';
-  simaticVars.count =
-    block + 'INT' + parseInt(getGlobalVar('yScan.numberOfDotsAddress'));
-  var n = constants.dotsCountMax;
-  var i = 0;
-  while ( n ) {
-    var packetSize = constants.packetSize;
-    if (packetSize > n) {
-      packetSize = n;
+function buildSimaticVars(allScans) {
+  simaticVars = {};
+  for (var scan of allScans) {
+    var scanName = scan.name;
+    var block = 'DB' + parseInt(getGlobalVar(scanName + '.blockNumber')) + ',';
+    simaticVars[scanName + '.count'] =
+      block + 'INT' + parseInt(getGlobalVar(scanName + '.numberOfDotsAddress'));
+    var n = constants.dotsCountMax;
+    var i = 0;
+    while ( n ) {
+      var packetSize = constants.packetSize;
+      if (packetSize > n) {
+        packetSize = n;
+      }
+      simaticVars[scanName + '.yArr' + i] =
+        block + 'REAL' + (parseInt(getGlobalVar(scanName + '.yArrayAddress')) + i*4*constants.packetSize) + '.' + packetSize;
+      i++;
+      n -= packetSize;
     }
-    simaticVars['yArr' + i] =
-      block + 'REAL' + (parseInt(getGlobalVar('yScan.yArrayAddress')) + i*4*constants.packetSize) + '.' + packetSize;
-    i++;
-    n -= packetSize;
+    simaticVars[scanName + '.yStatusArr'] =
+      block + 'BYTE' + parseInt(getGlobalVar(scanName + '.yStatusArrayAddress')) + '.' + (constants.dotsCountMax / 8);
   }
-  simaticVars.yStatusArr =
-    block + 'BYTE' + parseInt(getGlobalVar('yScan.yStatusArrayAddress')) + '.' + (constants.dotsCountMax / 8);
 }
 
 
@@ -320,7 +324,7 @@ function readPathFromSimatic(sender) {
   if ( !checkSimaticAddresses(allScans) ) {
       return;
   }
-  buildSimaticVars();
+  buildSimaticVars(allScans);
   communicateWithSimatic(() => {
     simaticConn.readAllItems(valuesReady);
   });
@@ -342,7 +346,7 @@ function writePathToSimatic(sender, data) {
   if ( !checkSimaticAddresses(allScans) ) {
       return;
   }
-  buildSimaticVars();
+  buildSimaticVars(allScans);
 
   // build data
   var yArr = [];
