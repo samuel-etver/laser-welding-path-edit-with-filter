@@ -277,47 +277,54 @@ function readPathFromSimatic(sender) {
       return;
     }
 
-    var count = values.count;
-    var i;
-    var yArr = [];
-    var y;
-    for (i = 0; ; i++) {
-      var arr = values['yArr' + i];
-      if ( !arr ) {
-        break;
+    var reply = {};
+
+    for (var scan of [yScan, zScan]) {
+      var scanName = scan.name;
+      var count = values[scanName + '.count'];
+      var i;
+      var yArr = [];
+      var y;
+      for (i = 0; ; i++) {
+        var arr = values[scanName + '.yArr' + i];
+        if ( !arr ) {
+          break;
+        }
+        for (y of arr) {
+          yArr.push(y);
+        }
       }
-      for (y of arr) {
-        yArr.push(y);
+
+      var yStatusArr = values[scanName + '.yStatusArr'];
+      var data = [];
+      var bitsIndex = 0;
+      var statusIndex = 0;
+      var status;
+      var statusBits;
+
+      for (i = 0; i < count; i++) {
+        y = yArr[i];
+        statusBits = yStatusArr[statusIndex];
+        status = 0;
+        if ( statusBits & (1 << (bitsIndex)) ) {
+          status = 1;
+        }
+        data.push({
+          y: y,
+          status: status
+        });
+        bitsIndex++;
+        if ( bitsIndex == 8 ) {
+          bitsIndex = 0;
+          statusIndex++;
+        }
       }
+
+      scan.weldingPathData = data;
+      reply[scanName] = data;
     }
 
-    var yStatusArr = values.yStatusArr;
-    var data = [];
-    var bitsIndex = 0;
-    var statusIndex = 0;
-    var status;
-    var statusBits;
-
-    for (i = 0; i < count; i++) {
-      y = yArr[i];
-      statusBits = yStatusArr[statusIndex];
-      status = 0;
-      if ( statusBits & (1 << (bitsIndex)) ) {
-        status = 1;
-      }
-      data.push({
-        y: y,
-        status: status
-      });
-      bitsIndex++;
-      if ( bitsIndex == 8 ) {
-        bitsIndex = 0;
-        statusIndex++;
-      }
-    }
-
-    yScan.weldingPathData = data;
-    sender.send('read-path-reply', data);
+    sender.send('read-path-reply', reply);
   }
 
   var allScans = [yScan, zScan];
@@ -332,13 +339,13 @@ function readPathFromSimatic(sender) {
 
 
 function writePathToSimatic(sender, data) {
-  yScan.weldingPathData = data.yScan;
-
   var allScans = [];
   if (data.yScan !== undefined) {
+    yScan.weldingPathData = data.yScan;
     allScans.push(yScan);
   }
   if (data.zScan !== undefined) {
+    zScan.weldingPathData = data.zScan;
     allScans.push(zScan);
   }
 
@@ -348,79 +355,86 @@ function writePathToSimatic(sender, data) {
   }
   buildSimaticVars(allScans);
 
-  // build data
-  var yArr = [];
-  var yStatusArr = [];
-  var yStatus = 0;
-  var yStatusBitIndex = 0;
-  var item;
-  var n = constants.dotsCountMax;
-  var i;
+  var itemsNames = [];
+  var itemsData = [];
 
-  var getY = getGlobalVar('yScan.writePathType') == 'after'
-    ? item => item.filteredY
-    : item => item.y;
-  var getStatus = getGlobalVar('yScan.writePathType') == 'after'
-    ? item => true
-    : item => item.status;
+  for(var scan of allScans) {
+    var scanName = scan.name;
 
-  for (item of yScan.weldingPathData) {
-    yArr.push( getY(item) );
-  }
-  for (i = yArr.length; i < n; i++) {
-    yArr.push( 0 );
-  }
+    // build data
+    var yArr = [];
+    var yStatusArr = [];
+    var yStatus = 0;
+    var yStatusBitIndex = 0;
+    var item;
+    var n = constants.dotsCountMax;
+    var i;
 
-  for (item of yScan.weldingPathData) {
-    yStatus >>= 1;
-    if ( getStatus(item) ) {
-        yStatus |= 0x80;
+    var getY = getGlobalVar(scanName + '.writePathType') == 'after'
+      ? item => item.filteredY
+      : item => item.y;
+    var getStatus = getGlobalVar(scanName + '.writePathType') == 'after'
+      ? item => true
+      : item => item.status;
+
+    for (item of scan.weldingPathData) {
+      yArr.push( getY(item) );
     }
-    yStatusBitIndex++;
-    if (yStatusBitIndex == 8) {
-      yStatusBitIndex = 0;
-      yStatusArr.push ( yStatus );
-      yStatus = 0;
-    }
-  }
-
-  if ( yStatusBitIndex ) {
-    yStatusArr.push( yStatus );
-  }
-  for (i = yStatusArr.length; i < n / 8; i++) {
-      yStatusArr.push( 0 );
-  }
-
-  var itemsNames = [
-    'count',
-    'yStatusArr',
-  ];
-  var itemsData  = [
-    yScan.weldingPathData.length,
-    yStatusArr,
-  ];
-
-  var n = yArr.length;
-  var packetIndex = 0;
-  var index = 0;
-  while ( n ) {
-    var packetSize = constants.packetSize;
-    if ( packetSize > n ) {
-      packetSize = n;
+    for (i = yArr.length; i < n; i++) {
+      yArr.push( 0 );
     }
 
-    var name = 'yArr' + packetIndex;
-    var data = [];
-    for (i = 0; i < packetSize; i++) {
-      data.push( yArr[index] );
-      index++;
+    for (item of scan.weldingPathData) {
+      yStatus >>= 1;
+      if ( getStatus(item) ) {
+          yStatus |= 0x80;
+      }
+      yStatusBitIndex++;
+      if (yStatusBitIndex == 8) {
+        yStatusBitIndex = 0;
+        yStatusArr.push ( yStatus );
+        yStatus = 0;
+      }
     }
 
-    itemsNames.push( name );
-    itemsData.push( data );
+    if ( yStatusBitIndex ) {
+      yStatusArr.push( yStatus );
+    }
+    for (i = yStatusArr.length; i < n / 8; i++) {
+        yStatusArr.push( 0 );
+    }
 
-    packetIndex++;
-    n -= packetSize;
+    itemNames.push(
+      scanName + '.count',
+      scanName + '.yStatusArr'
+    );
+    itemsData.push(
+      scan.weldingPathData.length,
+      yStatusArr
+    );
+
+    var n = yArr.length;
+    var packetIndex = 0;
+    var index = 0;
+    while ( n ) {
+      var packetSize = constants.packetSize;
+      if ( packetSize > n ) {
+        packetSize = n;
+      }
+
+      var name = scanName + '.yArr' + packetIndex;
+      var data = [];
+      for (i = 0; i < packetSize; i++) {
+        data.push( yArr[index] );
+        index++;
+      }
+
+      itemsNames.push( name );
+      itemsData.push( data );
+
+      packetIndex++;
+      n -= packetSize;
+    }
   }
 
   var written = function(err) {
