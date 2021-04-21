@@ -64,8 +64,8 @@ var yScan = {
   },
   onResetModifiedPathData: function() {
     this.yOffset = 0;
-    this.modifiedWeldingPathData = getActiveScan().originalWeldingPathData;
-    xyScan.pageShown = false;
+    this.modifiedWeldingPathData = this.originalWeldingPathData;
+    yzScan.pageShown = false;
     new Promise(() => this.refreshPage());
   }
 };
