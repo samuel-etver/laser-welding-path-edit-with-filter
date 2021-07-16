@@ -1,4 +1,4 @@
-const electron = require('electron');
+﻿const electron = require('electron');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 const Menu = electron.Menu;
@@ -404,7 +404,7 @@ function writePathToSimatic(sender, data) {
         yStatusArr.push( 0 );
     }
 
-    itemNames.push(
+    itemsNames.push(
       scanName + '.count',
       scanName + '.yStatusArr'
     );
