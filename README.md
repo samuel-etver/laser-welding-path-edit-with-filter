@@ -3,7 +3,7 @@
 Editor of the Y-coordinate of the path for the laser welding machine for large diameter pipes.
 
 ## Overview
-Using the program, the Y-coordinates of the scanned pipe track are read from the Simatic S-300 controller.
+Using the program, the Y,Z-coordinates of the scanned pipe track are read from the Simatic S-300 controller.
 Values can be changed either in the table or on the chart by dragging points.
 Point status (valid/not valid) can be changed in the table.
 The corrected path(or filtered path) is written back to the controller.
