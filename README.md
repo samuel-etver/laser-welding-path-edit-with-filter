@@ -1,6 +1,6 @@
 # laser-welding-path-edit-with-filter
 
-Editor of the Y-coordinate of the path for the laser welding machine for large diameter pipes.
+Editor of the Y,Z-coordinates of the path for the laser welding machine for large diameter pipes.
 
 ## Overview
 Using the program, the Y,Z-coordinates of the scanned pipe track are read from the Simatic S-300 controller.
