@@ -9,6 +9,16 @@ Point status (valid/not valid) can be changed in the table.
 The corrected path(or filtered path) is written back to the controller.
 The path can be saved/loaded in csv or xml-format.<br>
 
+### v2.x.x
+![](Screenshots/image10.jpg)
+
+![](Screenshots/image11.jpg)
+
+![](Screenshots/image12.jpg)
+
+![](Screenshots/image13.jpg)
+
+### v1.x.x
 ![](Screenshots/image1.jpg)
 
 ![](Screenshots/image2.jpg)
