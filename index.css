@@ -258,6 +258,11 @@ body {
   margin-left: 2rem;
 }
 
+#read-confirmation-modal-dialog-values-table {
+  position: relative;
+  margin-left: 2rem;
+}
+
 .bottom-bordered {
   border-bottom: 1px solid #ddd;
 }
@@ -267,6 +272,10 @@ body {
 }
 
 .write-confirmation-modal-dialog-values-table-column2 {
+  padding-left: 1rem;
+}
+
+.read-confirmation-modal-dialog-values-table-column2 {
   padding-left: 1rem;
 }
 

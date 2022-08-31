@@ -161,7 +161,7 @@ window.onload = function() {
   ipc.on('open-write-success-dialog', () => onOpenWriteSuccessDialog());
 
   readButton = document.getElementById('read-button');
-  readButton.addEventListener('click', readPathFromSimatic);
+  readButton.addEventListener('click', onReadButtonClick);
 
   var writeButton = document.getElementById('write-button');
   writeButton.addEventListener('click', onWriteButtonClick);
@@ -465,21 +465,93 @@ function buildPathTable(scan) {
 }
 
 
+function onReadButtonClick() {
+  var globalVarNames = [
+    'controllerIp',
+    'controllerRack',
+    'controllerSlot'
+  ];
+  var allScans = [
+    yScan,
+    zScan
+  ];
+  for (let scan of allScans) {
+    let prefix = scan.name + '.';
+    globalVarNames.push(
+      prefix + 'blockNumber',
+      prefix + 'yArrayAddress',
+      prefix + 'yStatusArrayAddress',
+      prefix + 'numberOfDotsAddress'
+    );
+  }
+  var globalVars = ipc.sendSync('get-global', globalVarNames);
+
+  var idPrefix = 'read-confirmation-modal-dialog-';
+  var setVar = function(scanName, name, value, valuePrefix) {
+    var elName = idPrefix + (scanName ? scanName.toLowerCase() + '-' : '') + name;
+    var el = document.getElementById(elName);
+    el.innerHTML =
+      '<b>' +
+      (value ? (valuePrefix ? valuePrefix : '') + value : '?') +
+      '</b>';
+  };
+
+  setVar(undefined, 'ip', globalVars.controllerIp);
+  setVar(undefined, 'controller-rack', globalVars.controllerRack);
+  setVar(undefined, 'controller-slot', globalVars.controllerSlot);
+
+  var allScans = [
+    yScan,
+    zScan
+  ];
+  for (let scan of allScans) {
+    var scanName = scan.name;
+    setVar(scanName, 'block-number', globalVars[scanName + '.blockNumber'], 'DB');
+    setVar(scanName, 'number-of-dots-address', globalVars[scanName + '.numberOfDotsAddress']);
+    setVar(scanName, 'y-array-address', globalVars[scanName + '.yArrayAddress']);
+    setVar(scanName, 'y-status-array-address', globalVars[scanName + '.yStatusArrayAddress']);
+  }
+
+  $('#read-confirmation-modal-dialog').modal('show');
+}
+
+
 function readPathFromSimatic() {
   ipc.on('read-path-reply', (event, arg) => {
-    yScan.originalWeldingPathData =
-    yScan.modifiedWeldingPathData = arg.yScan;
-    zScan.originalWeldingPathData =
-    zScan.modifiedWeldingPathData = arg.zScan;
-    for (var scan of [yScan, zScan]) {
+	var allScans = [];
+	if (arg.yScan) {
+      yScan.originalWeldingPathData =
+      yScan.modifiedWeldingPathData = arg.yScan;
+	  allScans.push(yScan);
+	}
+	if (arg.zScan) {
+      zScan.originalWeldingPathData =
+      zScan.modifiedWeldingPathData = arg.zScan;
+	  allScans.push(zScan);
+	}
+    for (var scan of allScans) {
       filterPath(scan);
       scan.pageShown = false;
     }
     yzScan.pageShown = false;
-    getActiveScan().refreshPage();
+	getActiveScan().refreshPage();
   });
 
-  ipc.send('read-path', "");
+  var el = document.getElementById('read-confirmation-modal-dialog-status-select');
+  var statusActivated = el.value == '1';
+  yScan.statusActivated =
+  zScan.statusActivated = el.value == '1';
+
+  var options = {};
+  el = document.getElementById('read-confirmation-modal-dialog-scan-select');
+  if (el.value == '1' || el.value == '3') {
+    options.yScan = {statusActivated: statusActivated};
+  }
+  if (el.value == '2' || el.value == '3') {
+    options.zScan = zScan;
+  }
+
+  ipc.send('read-path', options);
 }
 
 
@@ -499,7 +571,9 @@ window.onkeyup = function(event) {
 
 function onWriteButtonClick() {
   var globalVarNames = [
-    'controllerIp'
+    'controllerIp',
+    'controllerRack',
+    'controllerSlot'
   ];
   var allScans = [
     yScan,
@@ -528,6 +602,8 @@ function onWriteButtonClick() {
   };
 
   setVar(undefined, 'ip', globalVars.controllerIp);
+  setVar(undefined, 'controller-rack', globalVars.controllerRack);
+  setVar(undefined, 'controller-slot', globalVars.controllerSlot);
   var allScans = [
     yScan,
     zScan
@@ -563,6 +639,10 @@ function writePathToSimatic() {
   if (el.value == '2' || el.value == '3') {
     allScans.push(zScan);
   }
+
+  el = document.getElementById('write-confirmation-modal-dialog-status-select');
+  yScan.statusActivated =
+  zScan.statusActivated = el.value == '1';
 
   var data = {};
   for (scan of allScans) {
@@ -823,6 +903,8 @@ function refreshDotsCountLabels(scan) {
 function onOpenOptionsDialog() {
   var varNames = [
     'controllerIp',
+    'controllerRack',
+    'controllerSlot'
   ];
   var allScans = [
     yScan,
@@ -841,6 +923,12 @@ function onOpenOptionsDialog() {
 
   var ipInput = document.getElementById('ip-input');
   ipInput.value = globalVars.controllerIp;
+
+  var rackInput = document.getElementById('rack-input');
+  rackInput.value = globalVars.controllerRack;
+
+  var slotInput = document.getElementById('slot-input');
+  slotInput.value = globalVars.controllerSlot;
 
   var allScans = [
     yScan,
@@ -872,6 +960,12 @@ function onOptionsDialogOkClick() {
 
   var ipInput = document.getElementById('ip-input');
   values['controllerIp'] = ipInput.value;
+
+  var rackInput = document.getElementById('rack-input');
+  values['controllerRack'] = rackInput.value;
+
+  var slotInput = document.getElementById('slot-input');
+  values['controllerSlot'] = slotInput.value;
 
   var allScans = [
     yScan,
@@ -1034,12 +1128,19 @@ function prepareDialogs() {
     }
   }
 
-  let el = document.getElementById('write-confirmation-modal-dialog-scan-select');
-  el.addEventListener('change', () => onWriteConfirmationModalDialogScanSelect(el));
+  {
+    let el = document.getElementById('write-confirmation-modal-dialog-scan-select');
+    el.addEventListener('change', () => onWriteConfirmationModalDialogScanSelect(el));
+  }
+
+  {
+    let el = document.getElementById('read-confirmation-modal-dialog-scan-select');
+    el.addEventListener('change', () => onReadConfirmationModalDialogScanSelect(el));
+  }
 }
 
 
-function onWriteConfirmationModalDialogScanSelect(el) {
+function showElementsOfUsedScans(el, prefix) {
   var visible = {};
   switch (el.value) {
     case '1':
@@ -1069,11 +1170,24 @@ function onWriteConfirmationModalDialogScanSelect(el) {
   for (var scan of allScans) {
     var scanName = scan.name;
     var hidden = !visible[scanName];
-    var prefix = 'write-confirmation-modal-dialog-row-' + scanName.toLowerCase() + '-';
+    var elementPrefix = prefix + '-confirmation-modal-dialog-row-' + scanName.toLowerCase() + '-';
     for (var name of elNames) {
-      document.getElementById(prefix + name).hidden = hidden;
+      let currElement = document.getElementById(elementPrefix + name);
+      if (currElement) {
+        currElement.hidden = hidden;
+      }
     }
   }
+}
+
+
+function onWriteConfirmationModalDialogScanSelect(el) {
+  showElementsOfUsedScans(el, 'write');
+}
+
+
+function onReadConfirmationModalDialogScanSelect (el) {
+  showElementsOfUsedScans(el, 'read');
 }
 
 

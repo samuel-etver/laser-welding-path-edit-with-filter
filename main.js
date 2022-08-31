@@ -21,6 +21,8 @@ const configFileName = constants.appName + '2.config';
 
 var globalVars = {
   controllerIp: '',
+  controllerRack: '',
+  controllerSlot: '',
   yScan: {
     name: 'yScan',
     blockNumber: '',
@@ -39,6 +41,8 @@ globalVars.zScan.name = globalVars.yScan.name;
 
 const configVars = [
   'controllerIp',
+  'controllerRack',
+  'controllerSlot',
   'yScan.blockNumber',
   'yScan.yArrayAddress',
   'yScan.yStatusArrayAddress',
@@ -133,10 +137,10 @@ function createWindow () {
   Menu.setApplicationMenu(menu)
 
   ipc.on('read-path', (event, arg) => {
-     readPathFromSimatic(event.sender)
+     readPathFromSimatic(event.sender, arg);
   });
   ipc.on('write-path', (event, arg) => {
-     writePathToSimatic(event.sender, arg)
+     writePathToSimatic(event.sender, arg);
   });
   ipc.on('get-global', (event, arg) => {
      onGetGlobal(event, arg);
@@ -203,7 +207,7 @@ function checkSimaticAddresses(allScans) {
 }
 
 
-function buildSimaticVars(allScans) {
+function buildSimaticVars(allScans, options) {
   simaticVars = {};
   for (var scan of allScans) {
     var scanName = scan.name;
@@ -222,8 +226,10 @@ function buildSimaticVars(allScans) {
       i++;
       n -= packetSize;
     }
-    simaticVars[scanName + '.yStatusArr'] =
-      block + 'BYTE' + parseInt(getGlobalVar(scanName + '.yStatusArrayAddress')) + '.' + (constants.dotsCountMax / 8);
+    if (!options || options.statusActivated) {
+      simaticVars[scanName + '.yStatusArr'] =
+        block + 'BYTE' + parseInt(getGlobalVar(scanName + '.yStatusArrayAddress')) + '.' + (constants.dotsCountMax / 8);
+    }
   }
 }
 
@@ -235,8 +241,8 @@ function communicateWithSimatic(communicate, failed) {
       {
         port: 102,
         host: getGlobalVar('controllerIp'),
-        rack: 0,
-        slot: 2
+        rack: parseInt(getGlobalVar('controllerRack')), //0,
+        slot: parseInt(getGlobalVar('controllerSlot'))//2
       },
       connected
     );
@@ -270,7 +276,7 @@ function communicateWithSimatic(communicate, failed) {
 }
 
 
-function readPathFromSimatic(sender) {
+function readPathFromSimatic(sender, options) {
   var valuesReady = function(err, values) {
     if ( err ) {
       mainWindow.send('open-error-dialog', "Не удалось считать с контроллера.");
@@ -279,7 +285,7 @@ function readPathFromSimatic(sender) {
 
     var reply = {};
 
-    for (var scan of [yScan, zScan]) {
+    for (var scan of allScans) {
       var scanName = scan.name;
       var count = values[scanName + '.count'];
       var i;
@@ -304,7 +310,7 @@ function readPathFromSimatic(sender) {
 
       for (i = 0; i < count; i++) {
         y = yArr[i];
-        statusBits = yStatusArr[statusIndex];
+        statusBits = statusActivated ? yStatusArr[statusIndex] : 0xff;
         status = 0;
         if ( statusBits & (1 << (bitsIndex)) ) {
           status = 1;
@@ -323,15 +329,26 @@ function readPathFromSimatic(sender) {
       scan.weldingPathData = data;
       reply[scanName] = data;
     }
-
+	
     sender.send('read-path-reply', reply);
   }
 
-  var allScans = [yScan, zScan];
+
+  var allScans = [];
+  var statusActivated = true;
+  if (options.yScan) {
+    allScans.push(yScan);
+    statusActivated = options.yScan.statusActivated;
+  }
+  if (options.zScan) {
+    allScans.push(zScan);
+    statusActivated = options.zScan.statusActivated;
+  }
+
   if ( !checkSimaticAddresses(allScans) ) {
       return;
   }
-  buildSimaticVars(allScans);
+  buildSimaticVars(allScans, { statusActivated: statusActivated});
   communicateWithSimatic(() => {
     simaticConn.readAllItems(valuesReady);
   });
@@ -340,12 +357,15 @@ function readPathFromSimatic(sender) {
 
 function writePathToSimatic(sender, data) {
   var allScans = [];
+  var statusActivated = true;
   if (data.yScan !== undefined) {
     yScan.weldingPathData = data.yScan;
+	statusActivated = yScan.statusActivated;
     allScans.push(yScan);
   }
   if (data.zScan !== undefined) {
     zScan.weldingPathData = data.zScan;
+	statusActivated = zScan.statusActivated;
     allScans.push(zScan);
   }
 
@@ -353,7 +373,7 @@ function writePathToSimatic(sender, data) {
   if ( !checkSimaticAddresses(allScans) ) {
       return;
   }
-  buildSimaticVars(allScans);
+  buildSimaticVars(allScans, { statusActivated: statusActivated} );
 
   var itemsNames = [];
   var itemsData = [];
@@ -404,14 +424,12 @@ function writePathToSimatic(sender, data) {
         yStatusArr.push( 0 );
     }
 
-    itemsNames.push(
-      scanName + '.count',
-      scanName + '.yStatusArr'
-    );
-    itemsData.push(
-      scan.weldingPathData.length,
-      yStatusArr
-    );
+    itemsNames.push(scanName + '.count');
+    itemsData.push(scan.weldingPathData.length);
+	if (statusActivated) {
+      itemsNames.push(scanName + '.yStatusArr');
+	  itemsData.push(yStatusArr);
+    }
 
     var n = yArr.length;
     var packetIndex = 0;

@@ -200,9 +200,20 @@
 
           <div class="modal-body">
             <form style="margin: 2px">
+
               <div class="form-group">
                 <label for="ip-input">IP</label>
                 <input class="form-control first-focus focusable" id="ip-input">
+              </div>
+
+              <div class="form-group">
+                <label for="rack-input">Рэк</label>
+                <input class="form-control focusable" id="rack-input">
+              </div>
+
+              <div class="form-group">
+                <label for="slot-input">Слот</label>
+                <input class="form-control focusable" id="slot-input">
               </div>
 
               <div class="container mt-3" id="options-tabs" style="margin:2px; padding:2px 4px">
@@ -338,6 +349,111 @@
       </div>
     </div>
 
+    <!-- read confirmation dialog -->
+    <div class="modal" id="read-confirmation-modal-dialog">
+      <div class="modal-dialog  modal modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <img src="./Images/warning_64.png" width="48px" height="48px" align="bottom" style="margin-right:8px"></img>
+            <h4 class="modal-title" style="margin: auto 0" >Внимание!</h4>
+            <button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            Проверьте номер блока данных, и адреса переменных.<br>
+            <table id="read-confirmation-modal-dialog-values-table">
+              <tr style="bottom-border: 1px solid gray">
+                <td class="bottom-bordered">IP-адрес контроллера:</td>
+                <td class="bottom-bordered read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-ip"></span></td>
+              </tr>
+
+              <tr style="bottom-border: 1px solid gray">
+                <td class="bottom-bordered">Рэк:</td>
+                <td class="bottom-bordered read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-controller-rack"></span></td>
+              </tr>
+
+              <tr style="bottom-border: 1px solid gray">
+                <td class="bottom-bordered">Слот:</td>
+                <td class="bottom-bordered read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-controller-slot"></span></td>
+              </tr>
+
+              <tr class="bottom-bordered">
+                <td>Скан</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2">
+                  <div class="input-group input-group-sm">
+                    <select class="custom-select btn-sm focusable first-focus" id="read-confirmation-modal-dialog-scan-select">
+                      <option          value="1">Y-СКАН</option>
+                      <option          value="2">Z-СКАН</option>
+                      <option selected value="3">YZ-СКАНЫ</option>
+                    </select>
+                  </div>
+                </td>
+              </tr>
+
+              <tr class="bottom-bordered">
+                <td>Статус</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2">
+                  <div class="input-group input-group-sm">
+                    <select class="custom-select btn-sm focusable" id="read-confirmation-modal-dialog-status-select">
+                      <option selected value="1">Есть</option>
+                      <option          value="2">Нет</option>
+                    </select>
+                  </div>
+                </td>
+              </tr>
+
+              <tr class="bottom-bold-bordered" id="read-confirmation-modal-dialog-row-yscan-title">
+                <td colspan="2"><b>Y-СКАН</b></td>
+              </tr>
+              <tr class="bottom-bordered" id="read-confirmation-modal-dialog-row-yscan-block-number">
+                <td>Блок данных:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-yscan-block-number"></span></td>
+              </tr>
+              <tr class="bottom-bordered" id="read-confirmation-modal-dialog-row-yscan-number-of-dots-address">
+                <td>Адрес количества точек:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-yscan-number-of-dots-address"></span></td>
+              </tr>
+              <tr class="bottom-bordered" id="read-confirmation-modal-dialog-row-yscan-y-array-address">
+                <td>Адрес массива точек:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-yscan-y-array-address"></span></td>
+              </tr>
+              <tr class="bottom-bordered" id="read-confirmation-modal-dialog-row-yscan-y-status-array-address">
+                <td>Адрес массива статусов точек:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-yscan-y-status-array-address"></span></td>
+              </tr>
+
+              <tr class="bottom-bold-bordered" id="read-confirmation-modal-dialog-row-zscan-title">
+                <td colspan="2"><b>Z-СКАН</b></td>
+              </tr>
+              <tr class="bottom-bordered" id="read-confirmation-modal-dialog-row-zscan-block-number">
+                <td>Блок данных:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-zscan-block-number"></span></td>
+              </tr>
+              <tr class="bottom-bordered" id="read-confirmation-modal-dialog-row-zscan-number-of-dots-address">
+                <td>Адрес количества точек:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-zscan-number-of-dots-address"></span></td>
+              </tr>
+              <tr class="bottom-bordered" id="read-confirmation-modal-dialog-row-zscan-y-array-address">
+                <td>Адрес массива точек:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-zscan-y-array-address"></span></td>
+              </tr>
+              <tr id="read-confirmation-modal-dialog-row-zscan-y-status-array-address">
+                <td>Адрес массива статусов точек:</td>
+                <td class="read-confirmation-modal-dialog-values-table-column2"><span id="read-confirmation-modal-dialog-zscan-y-status-array-address"></span></td>
+              </tr>
+
+            </table>
+          </div>
+
+          <div class="modal-footer">
+          <button type="button" class="btn btn-primary focusable default-control" onclick="readPathFromSimatic();" data-dismiss="modal">Считать</button>
+            <button type="button" class="btn btn-primary focusable" data-dismiss="modal">Отмена</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
 
     <!-- write confirmation dialog -->
     <div class="modal" id="write-confirmation-modal-dialog">
@@ -358,6 +474,17 @@
                 <td class="bottom-bordered">IP-адрес контроллера:</td>
                 <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-ip"></span></td>
               </tr>
+
+              <tr style="bottom-border: 1px solid gray">
+                <td class="bottom-bordered">Рэк:</td>
+                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-controller-rack"></span></td>
+              </tr>
+
+              <tr style="bottom-border: 1px solid gray">
+                <td class="bottom-bordered">Слот:</td>
+                <td class="bottom-bordered write-confirmation-modal-dialog-values-table-column2"><span id="write-confirmation-modal-dialog-controller-slot"></span></td>
+              </tr>
+
               <tr class="bottom-bordered">
                 <td>Скан</td>
                 <td class="write-confirmation-modal-dialog-values-table-column2">
@@ -366,6 +493,18 @@
                       <option          value="1">Y-СКАН</option>
                       <option          value="2">Z-СКАН</option>
                       <option selected value="3">YZ-СКАНЫ</option>
+                    </select>
+                  </div>
+                </td>
+              </tr>
+
+              <tr class="bottom-bordered">
+                <td>Статус</td>
+                <td class="write-confirmation-modal-dialog-values-table-column2">
+                  <div class="input-group input-group-sm">
+                    <select class="custom-select btn-sm focusable" id="write-confirmation-modal-dialog-status-select">
+                      <option selected value="1">Есть</option>
+                      <option          value="2">Нет</option>
                     </select>
                   </div>
                 </td>
