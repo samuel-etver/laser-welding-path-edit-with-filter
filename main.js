@@ -33,6 +33,7 @@ var globalVars = {
   },
   userPath: '',
   homeDir: path.join(process.env.APPDATA, constants.appName),
+  appDir: app.getAppPath(),
   debug: false,
 };
 globalVars.zScan = Object.assign({}, globalVars.yScan);
@@ -329,7 +330,7 @@ function readPathFromSimatic(sender, options) {
       scan.weldingPathData = data;
       reply[scanName] = data;
     }
-	
+
     sender.send('read-path-reply', reply);
   }
 
@@ -485,7 +486,7 @@ function openOptionsDialog() {
 
 
 function loadConfig() {
-  let configFilePath = path.join(getGlobalVar('homeDir'), configFileName);
+  let configFilePath = path.join(getGlobalVar('appDir'), configFileName);
   let cfg = new config();
   cfg.load(configFilePath);
   for (let key of configVars) {
@@ -495,7 +496,7 @@ function loadConfig() {
 
 
 function saveConfig() {
-  let configFolder = getGlobalVar('homeDir');
+  let configFolder = getGlobalVar('appDir');
   if ( !fs.existsSync(configFolder) ) {
     fs.mkdirSync(configFolder, {recursive: true});
   }
