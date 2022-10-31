@@ -18,6 +18,8 @@ var yScan = {
   chartSelection: {
     x0: null,
     x1: null,
+    y0: null,
+    y1: null,
     index0: null,
     index1: null,
     state: null,
@@ -131,6 +133,7 @@ var activeScan = yScan;
 
 var draggedDotIndex;
 var ctrlKey;
+var shiftKey;
 var dragStartY;
 
 window.onload = function() {
@@ -556,15 +559,17 @@ function readPathFromSimatic() {
 
 
 window.onkeydown = function(event) {
-  if (event.keyCode == 17) {
-    ctrlKey = true;
+  switch(event.keyCode) {
+    case 16: shiftKey = true; break;
+    case 17: ctrlKey = true;  break;
   }
 }
 
 
 window.onkeyup = function(event) {
-  if(event.keyCode == 17) {
-    ctrlKey = false;
+  switch(event.keyCode) {
+    case 16: shiftKey = false; break;
+    case 17: ctrlKey = false;  break;
   }
 }
 
@@ -794,10 +799,15 @@ function onDragStopPathChart(dotChartIndex) {
   if (draggedRegion) {
     var x = activeScan.chartSelection.x0;
     var x1 = activeScan.chartSelection.x1;
+    var y0 = activeScan.chartSelection.y0;
+    var y1 = activeScan.chartSelection.y1;
     dotTableIndex = Math.round(x/kX);
     while(x < x1) {
       if(tableData[dotTableIndex].valid) {
-        tableData[dotTableIndex].y += draggedDeltaY;
+        if (x == draggedX || y0 == null || y1 == 0 || (
+            y0 <= tableData[dotTableIndex].y && tableData[dotTableIndex].y <= y1)) {
+          tableData[dotTableIndex].y += draggedDeltaY;
+        }
       }
       if(++dotTableIndex >= tableData.length) {
         break;
@@ -1204,6 +1214,8 @@ function onClearSelectionButtonClick() {
     let line = objects[1];
     rect.options.xmin = -1001;
     rect.options.xmax = -1000;
+    rect.options.ymin = null;
+    rect.options.ymax = null;
     line.options.x = -1000;
     activeScan.pathChart.replot();
   }
@@ -1323,29 +1335,39 @@ function onSetStatusInRangeDialogOkClick(status) {
 
 
 function onChartClick(event, gridPos, dataPos) {
-  if(ctrlKey) {
+  if(ctrlKey || shiftKey) {
     let activeScan = getActiveScan();
 
     let objects = activeScan.pathChart.plugins.canvasOverlay.objects;
     let rect = objects[0];
     let line = objects[1];
     let x = dataPos.xaxis;
+    let y = dataPos.yaxis;
 
     switch(activeScan.chartSelection.state) {
       case null:
       case 'rect':
         rect.options.xmin = -1001;
         rect.options.xmax = -1000;
+        rect.options.ymin = null;
+        rect.options.ymax = null;
         line.options.x = x;
         activeScan.chartSelection.x0 = x;
         activeScan.chartSelection.x1 = x;
+        activeScan.chartSelection.y0 = y;
+        activeScan.chartSelection.y1 = y;
         activeScan.chartSelection.state = 'line';
         break;
       case 'line':
         line.options.x = -1000;
         activeScan.chartSelection['x' + (x < activeScan.chartSelection.x0 ? '0' : '1')] = x;
+        activeScan.chartSelection['y' + (y < activeScan.chartSelection.y0 ? '0' : '1')] = y;
         rect.options.xmin = activeScan.chartSelection.x0;
         rect.options.xmax = activeScan.chartSelection.x1;
+        if (shiftKey) {
+          rect.options.ymin = activeScan.chartSelection.y0;
+          rect.options.ymax = activeScan.chartSelection.y1;
+        }
         activeScan.chartSelection.state = 'rect';
     }
 
@@ -1396,15 +1418,21 @@ function onChartSelectionYMoveDialogOkClick() {
 
   var x = activeScan.chartSelection.x0;
   var x1 = activeScan.chartSelection.x1;
+  var y0 = activeScan.chartSelection.y0;
+  var y1 = activeScan.chartSelection.y1;
   var tableData = activeScan.pathTable.getData();
   var kX = 1; // constants.kX
   var dotTableIndex = Math.round(x/kX);
   while(x < x1) {
     var item = activeScan.originalWeldingPathData[dotTableIndex];
     tableData[dotTableIndex].valid = item.status != 0;
-    tableData[dotTableIndex].y = item.y;
-    if (tableData[dotTableIndex].valid) {
-      tableData[dotTableIndex].y += yMove;
+//    tableData[dotTableIndex].y = item.y;
+    if(tableData[dotTableIndex].valid) {
+      if (y0 == null || y1 == null || (
+          tableData[dotTableIndex].y >= y0 &&
+          tableData[dotTableIndex].y <= y1)) {
+        tableData[dotTableIndex].y = item.y + yMove;
+      }
     }
     if(++dotTableIndex >= tableData.length) {
       break;
@@ -1473,6 +1501,8 @@ function onChartRangeSelectionDialogOkClick() {
     rect.options.xmin = -1001;
     rect.options.xmax = -1000;
   }
+  rect.options.ymin = null;
+  rect.options.ymax = null;
 
   activeScan.pathChart.replot();
 }
