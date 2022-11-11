@@ -107,6 +107,17 @@ function createWindow () {
           type: 'separator'
         },
         {
+          label: 'Импортировать Y...',
+          click: onImportYScanClick
+        },
+        {
+          label: 'Импортировать Z...',
+          click: onImportZScanClick
+        },
+        {
+          type: 'separator'
+        },
+        {
           label: 'Выход',
           click: onExitClick
         }
@@ -945,4 +956,60 @@ function setGlobalVar(name, value) {
     result = result[subNames[n]];
   }
   result[subNames[n]] = value;
+}
+
+
+function onImportYScanClick() {
+  onImportScanClick('yScan');
+}
+
+
+function onImportZScanClick() {
+  onImportScanClick('zScan');
+}
+
+
+function onImportScanClick() {
+  var defaultPath = getGlobalVar('userPath');
+
+  dialog.showOpenDialog(
+    {
+      title: 'Импортировать файл',
+      defaultPath: defaultPath,
+      filters: [
+        {
+          name: "XML файлы (*.xml)",
+          extensions: ["xml"]
+        },
+        {
+          name: "CSV файлы (*.csv)",
+          extensions: ["csv"]
+        },
+        {
+          name: "Все файлы (*.*)",
+          extensions: ["*"]
+        },
+      ],
+      properties: ['openFile', 'createDirectory']
+    }
+  ).then(//result => {
+    //var filename = result.filePaths[0];
+    //setGlobalVar('userPath', path.dirname(filename));
+    //saveConfig();
+//    loadFile(filename).then(
+//      () => {
+  //      mainWindow.send('set-path-data', {
+    //      yScan: yScan.weldingPathData,
+      //    zScan: zScan.weldingPathData
+//        });
+  //    },
+//      () => {
+        //mainWindow.send(
+        //  'open-error-dialog',
+//          'Не удалось загрузить данные из файла \n(' + filename + ')'
+  //      );
+    //  }
+//    );
+  //}
+).catch();
 }
