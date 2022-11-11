@@ -969,7 +969,7 @@ function onImportZScanClick() {
 }
 
 
-function onImportScanClick() {
+function onImportScanClick(scanName) {
   var defaultPath = getGlobalVar('userPath');
 
   dialog.showOpenDialog(
@@ -977,10 +977,6 @@ function onImportScanClick() {
       title: 'Импортировать файл',
       defaultPath: defaultPath,
       filters: [
-        {
-          name: "XML файлы (*.xml)",
-          extensions: ["xml"]
-        },
         {
           name: "CSV файлы (*.csv)",
           extensions: ["csv"]
@@ -992,10 +988,11 @@ function onImportScanClick() {
       ],
       properties: ['openFile', 'createDirectory']
     }
-  ).then(//result => {
-    //var filename = result.filePaths[0];
-    //setGlobalVar('userPath', path.dirname(filename));
-    //saveConfig();
+  ).then(result => {
+    var filename = result.filePaths[0];
+    setGlobalVar('userPath', path.dirname(filename));
+    saveConfig();
+    importScanFile(scanName);
 //    loadFile(filename).then(
 //      () => {
   //      mainWindow.send('set-path-data', {
@@ -1010,6 +1007,11 @@ function onImportScanClick() {
   //      );
     //  }
 //    );
-  //}
+  }
 ).catch();
+}
+
+
+function importScanFile(scanName) {
+
 }
