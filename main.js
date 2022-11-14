@@ -13,6 +13,31 @@ const xmldom = require('xmldom');
 const nodes7 = require('nodes7');
 const config = require('./config.js');
 const constants = require('./constants.js');
+const dataFileFilters = [
+  {
+    name: "XML файлы (*.xml)",
+    extensions: ["xml"]
+  },
+  {
+    name: "CSV файлы (*.csv)",
+    extensions: ["csv"]
+  },
+  {
+    name: "Все файлы (*.*)",
+    extensions: ["*"]
+  }
+];
+const  importFileFilters =  [
+  {
+    name: "CSV файлы (*.csv)",
+    extensions: ["csv"]
+  },
+  {
+    name: "Все файлы (*.*)",
+    extensions: ["*"]
+  }
+];
+
 
 var mainWindow;
 var aboutDialog;
@@ -546,65 +571,49 @@ function onExitClick() {
 
 function onLoadClick() {
   var defaultPath = getGlobalVar('userPath');
+  var fileName;
 
   dialog.showOpenDialog(
     {
       title: 'Открыть файл',
       defaultPath: defaultPath,
-      filters: [
-        {
-          name: "XML файлы (*.xml)",
-          extensions: ["xml"]
-        },
-        {
-          name: "CSV файлы (*.csv)",
-          extensions: ["csv"]
-        },
-        {
-          name: "Все файлы (*.*)",
-          extensions: ["*"]
-        },
-      ],
+      filters: dataFileFilters,
       properties: ['openFile', 'createDirectory']
     }
   ).then(result => {
-    var filename = result.filePaths[0];
-    setGlobalVar('userPath', path.dirname(filename));
-    saveConfig();
-    loadFile(filename).then(
-      () => {
-        mainWindow.send('set-path-data', {
-          yScan: yScan.weldingPathData,
-          zScan: zScan.weldingPathData
-        });
-      },
-      () => {
-        mainWindow.send(
-          'open-error-dialog',
-          'Не удалось загрузить данные из файла \n(' + filename + ')'
-        );
-      }
+    if (!result.canceled) {
+      fileName = result.filePaths[0];
+      setGlobalVar('userPath', path.dirname(fileName));
+      saveConfig();
+      return loadFile(fileName);
+    }
+  }).then(() => {
+    mainWindow.send('set-path-data', {
+      yScan: yScan.weldingPathData,
+      zScan: zScan.weldingPathData
+    });
+  }).catch(() => {
+    fileName &&  mainWindow.send(
+      'open-error-dialog',
+      'Не удалось загрузить данные из файла \n(' + fileName + ')'
     );
   });
 }
 
 
-function loadFile(filename) {
-  var ext = path.extname(filename).toLowerCase();
+function loadFile(fileName) {
+  var ext = path.extname(fileName).toLowerCase();
   switch(ext) {
     case '.xml':
-      return loadFromXmlFile(filename);
+      return loadFromXmlFile(fileName);
     case '.csv':
-      return loadFromCsvFile(filename);
+      return loadFromCsvFile(fileName);
   }
-
-  return new Promise((resolve, reject) => {
-    reject();
-  });
+  return new Promise((resolve, reject) => reject());
 }
 
 
-function loadFromXmlFile(filename) {
+function loadFromXmlFile(fileName) {
   var error = true;
   var newYWeldingPathData = [];
   var newZWeldingPathData = [];
@@ -612,7 +621,7 @@ function loadFromXmlFile(filename) {
   var zPathDataStop = false;
   var promise = new Promise((resolve, reject) => {
     try {
-      var txt = fs.readFileSync(filename, 'utf8');
+      var txt = fs.readFileSync(fileName, 'utf8');
       var parser = new xmldom.DOMParser();
       var doc = parser.parseFromString(txt);
       parsing: {
@@ -705,14 +714,14 @@ function loadFromXmlFile(filename) {
 }
 
 
-function loadFromCsvFile(filename) {
+function loadFromCsvFile(fileName) {
   var newYWeldingPathData = [];
   var newZWeldingPathData = [];
   var yPathDataStop = false;
   var zPathDataStop = false;
 
   var promise = new Promise((resolve, reject) => {
-    fs.createReadStream(filename)
+    fs.createReadStream(fileName)
       .pipe(csvParser({
         separator: ';'
       }))
@@ -775,7 +784,7 @@ function loadFromCsvFile(filename) {
 
 
 function onSaveClick() {
-  ipc.once('get-path-data-reply', (event, arg) => onGetPathData(arg) );
+  ipc.once('get-path-data-reply', (event, arg) => onGetPathData(arg));
   mainWindow.send('get-path-data');
 
   function onGetPathData(data) {
@@ -788,44 +797,30 @@ function onSaveClick() {
       {
         title: 'Сохранить в файле',
         defaultPath: defaultPath,
-        filters: [
-          {
-            name: "XML файлы (*.xml)",
-            extensions: ["xml"]
-          },
-          {
-            name: "CSV файлы (*.csv)",
-            extensions: ["csv"]
-          },
-          {
-            name: "Все файлы (*.*)",
-            extensions: ["*"]
-          },
-        ],
+        filters: dataFileFilters,
       }
     ).then(result => {
-      var filename = result.filePath;
-      var ext = path.extname(filename).toLowerCase();
-      if ( !['.xml', '.csv'].includes(ext) ) {
-        ext = '.xml';
-        filename += ext;
+      if (!result.canceled) {
+        var fileName = result.filePath;
+        var ext = path.extname(fileName).toLowerCase();
+        if (!['.xml', '.csv'].includes(ext)) {
+          fileName += '.xml';
+        }
+        setGlobalVar('userPath', path.dirname(fileName));
+        saveConfig();
+        saveFile(fileName);
       }
-
-      setGlobalVar('debug', ext);
-      setGlobalVar('userPath', path.dirname(filename));
-      saveConfig();
-      saveFile(filename);
-    });
+    }).catch();
   }
 }
 
 
-function saveFile(filename) {
-  var ext = path.extname(filename).toLowerCase();
+function saveFile(fileName) {
+  var ext = path.extname(fileName).toLowerCase();
   var failed = function() {
     mainWindow.send(
       'open-error-dialog',
-      'Не удалось данные сохранить в файле \n(' + filename + ')'
+      'Не удалось данные сохранить в файле \n(' + fileName + ')'
     );
   }
 
@@ -859,16 +854,16 @@ function saveFile(filename) {
 
   switch(ext) {
     case '.xml':
-      saveToXmlFile(filename, data).catch(failed);
+      saveToXmlFile(fileName, data).catch(failed);
       break;
     case '.csv':
-      saveToCsvFile(filename, data).catch(failed);
+      saveToCsvFile(fileName, data).catch(failed);
       break;
   }
 }
 
 
-function saveToXmlFile(filename, data) {
+function saveToXmlFile(fileName, data) {
   var doc = new xmldom.DOMParser().parseFromString(
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<laser_welding_path_editor/>');
@@ -892,7 +887,7 @@ function saveToXmlFile(filename, data) {
   var txt = serializer.serializeToString(doc);
   return new Promise((resolve, reject) => {
     try {
-      fs.writeFileSync(filename, txt, 'utf8');
+      fs.writeFileSync(fileName, txt, 'utf8');
       resolve();
     }
     catch(e) {
@@ -902,9 +897,9 @@ function saveToXmlFile(filename, data) {
 }
 
 
-function saveToCsvFile(filename, data) {
+function saveToCsvFile(fileName, data) {
   const writer = csvWriter.createArrayCsvWriter({
-    path: filename,
+    path: fileName,
     header: ['Y','STATUS','Z', 'Z_STATUS'],
     fieldDelimiter: ';',
     recordDelimiter: '\r\n'
@@ -971,47 +966,29 @@ function onImportZScanClick() {
 
 function onImportScanClick(scanName) {
   var defaultPath = getGlobalVar('userPath');
+  var fileName;
 
   dialog.showOpenDialog(
     {
       title: 'Импортировать файл',
       defaultPath: defaultPath,
-      filters: [
-        {
-          name: "CSV файлы (*.csv)",
-          extensions: ["csv"]
-        },
-        {
-          name: "Все файлы (*.*)",
-          extensions: ["*"]
-        },
-      ],
+      filters: importFileFilters,
       properties: ['openFile', 'createDirectory']
     }
   ).then(result => {
-    var filename = result.filePaths[0];
-    setGlobalVar('userPath', path.dirname(filename));
-    saveConfig();
-    importScanFile(scanName);
-//    loadFile(filename).then(
-//      () => {
-  //      mainWindow.send('set-path-data', {
-    //      yScan: yScan.weldingPathData,
-      //    zScan: zScan.weldingPathData
-//        });
-  //    },
-//      () => {
-        //mainWindow.send(
-        //  'open-error-dialog',
-//          'Не удалось загрузить данные из файла \n(' + filename + ')'
-  //      );
-    //  }
-//    );
-  }
-).catch();
+    if (!result.canceled) {
+      fileName = result.filePaths[0];
+      setGlobalVar('userPath', path.dirname(fileName));
+      saveConfig();
+      importScanFile(fileName, scanName);
+    }
+  }).catch(
+    () => {
+    }  
+  );
 }
 
 
-function importScanFile(scanName) {
+function importScanFile(fileName, scanName) {
 
 }
