@@ -726,7 +726,7 @@ function loadFromCsvFile(fileName) {
         separator: ';'
       }))
       .on('data', data => {
-      if (!yPathDataStop && data.Y && data.STATUS) {
+      if (!yPathDataStop && data.Y !== undefined && data.STATUS !== undefined) {
         var y = parseFloat(data.Y);
         var status = parseInt(data.STATUS);
         if ( !isNaN(y) && !isNaN(status) ) {
@@ -746,7 +746,7 @@ function loadFromCsvFile(fileName) {
         yPathDataStop = true;
       }
 
-      if (!zPathDataStop && data.Z && data.Z_STATUS) {
+      if (!zPathDataStop && data.Z !== undefined && data.Z_STATUS !== undefined) {
         y = parseFloat(data.Z);
         status = parseInt(data.Z_STATUS);
         if ( !isNaN(y) && !isNaN(status) ) {
@@ -980,15 +980,57 @@ function onImportScanClick(scanName) {
       fileName = result.filePaths[0];
       setGlobalVar('userPath', path.dirname(fileName));
       saveConfig();
-      importScanFile(fileName, scanName);
+      return importScanFile(fileName, scanName);
     }
+  }).then(() => {
+    mainWindow.send('set-path-data', {
+      yScan: yScan.weldingPathData,
+      zScan: zScan.weldingPathData
+    });
   }).catch(
     () => {
-    }  
+      fileName &&  mainWindow.send(
+        'open-error-dialog',
+        'Не удалось имортировать данные из файла \n(' + fileName + ')'
+      );
+    }
   );
 }
 
 
 function importScanFile(fileName, scanName) {
+  var pathDataStop = false;
+  var newWeldingPathData = [];
 
+  var promise = new Promise((resolve, reject) => {
+    fs.createReadStream(fileName)
+      .pipe(csvParser({
+        separator: ';'
+      }))
+      .on('data', data => {
+        if (!pathDataStop) {
+          var y = parseFloat(data[0]);
+          if (!isNaN(y)) {
+            newWeldingPathData.push({
+                y: y,
+                status: 1
+            });
+          }
+          else {
+            pathDataStop = true;
+          }
+        }
+      })
+      .on('end', () => {
+        if (pathDataStop) {
+          reject();
+        }
+        else {
+          eval(scanName).weldingPathData = newWeldingPathData;
+          resolve();
+        }
+      });
+  });
+
+  return promise;
 }
