@@ -1009,7 +1009,11 @@ function importScanFile(fileName, scanName) {
       }))
       .on('data', data => {
         if (!pathDataStop) {
-          var y = parseFloat(data[0]);
+          var yStr = data[0];
+          if (yStr !== undefined) {
+            yStr = yStr.replace(',', '.');
+          }
+          var y = parseFloat(yStr);
           if (!isNaN(y)) {
             newWeldingPathData.push({
                 y: y,
