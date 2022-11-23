@@ -1009,7 +1009,7 @@ function importScanFile(fileName, scanName) {
       }))
       .on('data', data => {
         if (!pathDataStop) {
-          var yStr = data[0];
+          var yStr = Object.values(data)[0];
           if (yStr !== undefined) {
             yStr = yStr.replace(',', '.');
           }
